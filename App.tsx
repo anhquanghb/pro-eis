@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { migrateState } from './utils/migration';
+import { migrateState, normalizeIncomingData } from './utils/migration';
 import { AppState, MoetSubBlock, TeachingMethod, AssessmentMethod } from './types';
 import { INITIAL_STATE, CODE_VERSION } from './constants';
 import Layout from './components/Layout';
@@ -241,9 +241,9 @@ const App: React.FC = () => {
         }
     };
 
-    const majorCode = state.generalInfo.moetInfo.majorCode || 'UnknownCode';
-    const specNameRaw = state.generalInfo.moetInfo.programName['en'] || 
-                        state.generalInfo.moetInfo.programName[state.language] || 
+    const majorCode = state.globalState?.moetInfo?.majorCode || state.generalInfo?.moetInfo?.majorCode || 'UnknownCode';
+    const specNameRaw = state.programs?.find(p => p.id === state.currentProgramId)?.programName?.['en'] || 
+                        state.generalInfo?.moetInfo?.programName?.['en'] || 
                         'General';
     
     const sanitize = (str: string) => str.trim().replace(/[^a-zA-Z0-9-_]/g, '_');
@@ -324,14 +324,15 @@ const App: React.FC = () => {
       const reader = new FileReader();
       reader.onload = async (evt) => {
           try {
-              const parsed = JSON.parse(evt.target?.result as string);
+              const rawData = JSON.parse(evt.target?.result as string);
+              const parsed = normalizeIncomingData(rawData);
               if (confirm(state.language === 'vi' ? "Khôi phục dữ liệu từ tệp? Hành động này sẽ ghi đè dữ liệu hiện tại." : "Restore state from file? This will overwrite current data.")) {
                   setState(prev => ({ 
                       ...parsed, 
                       currentUser: prev.currentUser || parsed.currentUser,
                       geminiConfig: {
                           ...parsed.geminiConfig,
-                          apiKey: prev.geminiConfig?.apiKey
+                          apiKey: prev.globalState?.geminiConfig?.apiKey || prev.geminiConfig?.apiKey
                       }
                   })); 
                   
@@ -361,7 +362,8 @@ const App: React.FC = () => {
 
           const file = await handle.getFile();
           const text = await file.text();
-          const parsed = JSON.parse(text);
+          const rawData = JSON.parse(text);
+          const parsed = normalizeIncomingData(rawData);
           
           if (confirm(state.language === 'vi' ? "Khôi phục dữ liệu từ tệp này?" : "Restore data from this file?")) {
               setState(prev => ({ 
@@ -369,7 +371,7 @@ const App: React.FC = () => {
                   currentUser: prev.currentUser || parsed.currentUser,
                   geminiConfig: {
                       ...parsed.geminiConfig,
-                      apiKey: prev.geminiConfig?.apiKey
+                      apiKey: prev.globalState?.geminiConfig?.apiKey || prev.geminiConfig?.apiKey
                   }
               }));
               

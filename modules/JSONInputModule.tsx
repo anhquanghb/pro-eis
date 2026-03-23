@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { migrateState } from '../utils/migration';
+import { migrateState, normalizeIncomingData } from '../utils/migration';
 import { AppState, Faculty, Course, LibraryResource, GeneralInfo } from '../types';
 import { FileJson, Upload, X, AlertTriangle, Check, Copy, Plus, BookOpen, Merge, RefreshCw, Search, Info, ExternalLink, Sparkles, Database, Download, CheckCircle2, ListFilter, Code, History, FileText, Save, Trash2 } from 'lucide-react';
 import { INITIAL_STATE, TRANSLATIONS } from '../constants';
@@ -619,24 +619,6 @@ const JSONInputModule: React.FC<Props> = ({ state, updateState, onExport, recent
   };
 
   // --- Logic: Full System Import/Export (Moved from Settings) ---
-  const normalizeIncomingData = (data: any): AppState => {
-      // 1. If data already has globalState and programs, it's a new relational state
-      if (data.globalState && data.programs && data.programs.length > 0) {
-          return {
-              ...INITIAL_STATE,
-              ...data,
-              language: data.language || 'en',
-              authEnabled: data.authEnabled !== undefined ? data.authEnabled : INITIAL_STATE.authEnabled,
-              currentUser: INITIAL_STATE.currentUser, // Do not overwrite current user session
-              users: Array.isArray(data.users) ? data.users : INITIAL_STATE.users,
-              geminiConfig: { ...INITIAL_STATE.geminiConfig, ...(data.geminiConfig || {}) },
-          };
-      }
-
-      // 2. Otherwise, it's an old flat state. Migrate it.
-      return migrateState(data);
-  };
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -729,47 +711,6 @@ const JSONInputModule: React.FC<Props> = ({ state, updateState, onExport, recent
                           ...pendingImport.globalState.geminiConfig,
                           apiKey: currentApiKey
                       }
-                  };
-                  nextState.users = pendingImport.users;
-                  nextState.authEnabled = pendingImport.authEnabled;
-              }
-          } else {
-              // Flat state import (legacy)
-              if (importOptions.general) {
-                  nextState.generalInfo = pendingImport.generalInfo;
-                  nextState.mission = pendingImport.mission;
-                  nextState.library = pendingImport.library;
-                  nextState.academicSchools = pendingImport.academicSchools;
-                  nextState.academicFaculties = pendingImport.academicFaculties;
-                  nextState.departments = pendingImport.departments;
-                  nextState.facilities = pendingImport.facilities;
-              }
-              if (importOptions.strategy) {
-                  nextState.peos = pendingImport.peos;
-                  nextState.sos = pendingImport.sos;
-              }
-              if (importOptions.courses) {
-                  nextState.courses = pendingImport.courses;
-                  nextState.knowledgeAreas = pendingImport.knowledgeAreas;
-                  nextState.teachingMethods = pendingImport.teachingMethods;
-                  nextState.assessmentMethods = pendingImport.assessmentMethods;
-              }
-              if (importOptions.faculty) {
-                  nextState.faculties = pendingImport.faculties;
-                  nextState.facultyTitles = pendingImport.facultyTitles;
-              }
-              if (importOptions.matrices) {
-                  nextState.courseSoMap = pendingImport.courseSoMap;
-                  nextState.coursePiMap = pendingImport.coursePiMap;
-                  nextState.coursePeoMap = pendingImport.coursePeoMap;
-                  nextState.peoSoMap = pendingImport.peoSoMap;
-                  nextState.peoConstituentMap = pendingImport.peoConstituentMap;
-              }
-              if (importOptions.settings) {
-                  const currentApiKey = prev.geminiConfig?.apiKey;
-                  nextState.geminiConfig = {
-                      ...pendingImport.geminiConfig,
-                      apiKey: currentApiKey
                   };
                   nextState.users = pendingImport.users;
                   nextState.authEnabled = pendingImport.authEnabled;

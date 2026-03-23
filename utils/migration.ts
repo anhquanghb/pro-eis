@@ -1,6 +1,29 @@
 
 import { AppState, GlobalState, ProgramState } from '../types';
-import { CODE_VERSION } from '../constants';
+import { CODE_VERSION, INITIAL_STATE } from '../constants';
+
+/**
+ * Normalizes incoming data by detecting if it's in the new relational format
+ * or the old flat format, and migrating if necessary.
+ */
+export const normalizeIncomingData = (data: any): AppState => {
+  // 1. If data already has globalState and programs, it's a new relational state
+  if (data.globalState && data.programs && data.programs.length > 0) {
+    return {
+      ...INITIAL_STATE,
+      ...data,
+      language: data.language || 'en',
+      authEnabled: data.authEnabled !== undefined ? data.authEnabled : INITIAL_STATE.authEnabled,
+      currentUser: INITIAL_STATE.currentUser, // Do not overwrite current user session
+      users: Array.isArray(data.users) ? data.users : INITIAL_STATE.users,
+      geminiConfig: { ...INITIAL_STATE.geminiConfig, ...(data.geminiConfig || {}) },
+      version: CODE_VERSION
+    };
+  }
+
+  // 2. Otherwise, it's an old flat state. Migrate it.
+  return migrateState(data);
+};
 
 /**
  * Migrates old flat AppState to the new relational structure (globalState + programs)
@@ -67,29 +90,31 @@ export const migrateState = (oldState: any): AppState => {
 
   // 2. Create default ProgramState from flat fields
   const programId = `prog-${Date.now()}`;
+  const moetInfo = oldState.generalInfo?.moetInfo || {};
+  
   const programState: ProgramState = {
     id: programId,
-    programCode: oldState.generalInfo?.moetInfo?.programCode || '',
-    programName: oldState.generalInfo?.programName || { vi: 'Chương trình mới', en: 'New Program' },
-    degreeLevel: oldState.generalInfo?.moetInfo?.level || { vi: '', en: '' },
+    programCode: moetInfo.programCode || '',
+    programName: oldState.generalInfo?.programName || moetInfo.programName || { vi: 'Chương trình mới', en: 'New Program' },
+    degreeLevel: moetInfo.level || { vi: '', en: '' },
     programSpecificInfo: {
-      targetStudents: oldState.generalInfo?.moetInfo?.admissionTarget || { vi: '', en: '' },
-      entryRequirements: oldState.generalInfo?.moetInfo?.admissionReq || { vi: '', en: '' },
-      graduationConditions: oldState.generalInfo?.moetInfo?.graduationReq || { vi: '', en: '' },
-      assessmentMethods: oldState.generalInfo?.moetInfo?.assessmentMethods || { vi: '', en: '' },
-      admissionPlan: oldState.generalInfo?.moetInfo?.admissionPlan || { vi: '', en: '' },
-      qualityAssurancePlan: oldState.generalInfo?.moetInfo?.qualityAssurancePlan || { vi: '', en: '' },
-      implementationGuidelines: oldState.generalInfo?.moetInfo?.implementationGuideline || { vi: '', en: '' }
+      targetStudents: moetInfo.admissionTarget || { vi: '', en: '' },
+      entryRequirements: moetInfo.admissionReq || { vi: '', en: '' },
+      graduationConditions: moetInfo.graduationReq || { vi: '', en: '' },
+      assessmentMethods: moetInfo.assessmentMethods || { vi: '', en: '' },
+      admissionPlan: moetInfo.admissionPlan || { vi: '', en: '' },
+      qualityAssurancePlan: moetInfo.qualityAssurancePlan || { vi: '', en: '' },
+      implementationGuidelines: moetInfo.implementationGuideline || { vi: '', en: '' }
     },
-    GPLO: oldState.generalInfo?.moetInfo?.generalObjectives || { vi: '', en: '' },
-    PLOs: oldState.generalInfo?.moetInfo?.moetSpecificObjectives || [],
-    LOs: oldState.generalInfo?.moetInfo?.specificObjectives || [],
+    GPLO: moetInfo.generalObjectives || { vi: '', en: '' },
+    PLOs: moetInfo.moetSpecificObjectives || [],
+    LOs: moetInfo.specificObjectives || [],
     PEOs: oldState.peos || [],
-    peoPloMap: [], 
+    peoPloMap: oldState.peoPloMap || [], 
     SOs: oldState.sos || [],
-    loSoMap: [], 
+    loSoMap: oldState.loSoMap || [], 
     studentOutcomes: oldState.sos || [],
-    curriculumStructure: oldState.generalInfo?.moetInfo?.structure || [],
+    curriculumStructure: moetInfo.structure || [],
     matrix: oldState.courseSoMap || [],
     courseSoMap: oldState.courseSoMap || [],
     coursePiMap: oldState.coursePiMap || [],
@@ -97,7 +122,7 @@ export const migrateState = (oldState: any): AppState => {
     peoSoMap: oldState.peoSoMap || [],
     peoConstituentMap: oldState.peoConstituentMap || [],
     mission: oldState.mission || { text: { vi: '', en: '' }, constituents: [] },
-    moetInfo: oldState.generalInfo?.moetInfo || {}
+    moetInfo: moetInfo
   };
 
   // 3. Assemble new AppState
