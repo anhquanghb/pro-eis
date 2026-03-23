@@ -974,7 +974,7 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
                                                 <CheckSquare size={10} /> {language === 'vi' ? 'Đáp ứng Mục tiêu cụ thể' : 'Specific Objectives Mapping'}
                                             </label>
                                             <MoetObjectiveSelector 
-                                                objectives={generalInfo.moetInfo.specificObjectives || []} 
+                                                objectives={generalInfo?.moetInfo?.specificObjectives || []} 
                                                 selectedIds={course.cloMap?.find(m => m.cloIndex === idx)?.objectiveIds || []} 
                                                 highlightedIds={courseMoetHighlights} 
                                                 onUpdate={(ids) => updateCloMap(idx, { objectiveIds: ids })} 

@@ -421,7 +421,7 @@ export const generateSingleSyllabusContent = (
     content.push(new Paragraph({ text: "", spacing: { after: 200 } }));
 
     // 8. Matrix
-    const sortedObjectives = [...(generalInfo.moetInfo.specificObjectives || [])]
+    const sortedObjectives = [...(generalInfo?.moetInfo?.specificObjectives || [])]
         .filter(o => (o.code ? o.code.split('.').length : 3) === 3)
         .sort((a,b) => sortOutlineCode(a.code, b.code));
 

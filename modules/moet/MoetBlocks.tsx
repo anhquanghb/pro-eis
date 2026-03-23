@@ -70,7 +70,7 @@ const MoetBlocks: React.FC<Props> = ({ state, updateState }) => {
   const generalInfo = globalState.institutionInfo || state.generalInfo;
   const { language } = state;
   const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
-  const moetInfo = currentProgram?.moetInfo || generalInfo.moetInfo || { blocks: [] };
+  const moetInfo = currentProgram?.moetInfo || generalInfo?.moetInfo || { blocks: [] };
   const blocks = moetInfo.blocks || [];
 
   const sensors = useSensors(

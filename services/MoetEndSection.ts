@@ -175,8 +175,8 @@ export const generateMoetEndSection = (
     }
 
     // --- Signature ---
-    const directorTitle = generalInfo.signerTitle?.[language]?.toUpperCase() || (language === 'vi' ? "GIÁM ĐỐC" : "DIRECTOR");
-    const signerName = generalInfo.signerName || "TS. Lê Nguyễn A";
+    const directorTitle = generalInfo?.signerTitle?.[language]?.toUpperCase() || (language === 'vi' ? "GIÁM ĐỐC" : "DIRECTOR");
+    const signerName = generalInfo?.signerName || "TS. Lê Nguyễn A";
     
     sections.push(new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
@@ -247,7 +247,8 @@ export const exportMoetEndSectionFile = async (
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `MOET_Part5_End_${generalInfo.programName[language].replace(/\s+/g, '_')}.docx`;
+        const progName = generalInfo?.programName?.[language] || generalInfo?.programName?.vi || "Program";
+        link.download = `MOET_Part5_End_${progName.replace(/\s+/g, '_')}.docx`;
         link.click();
     } catch (e) {
         console.error(e);

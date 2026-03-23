@@ -247,24 +247,24 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
     ];
 
     // 3. General Info Table
-    const specsStr = (moetInfo.specializations || []).map((s, i) => {
+    const specsStr = (moetInfo?.specializations || []).map((s, i) => {
         const text = `+ ${s[language]}`;
         return i === 0 ? text : `\t${text}`;
     }).join('\n');
 
     const infoFields = [
-        { label: isVi ? "Tên chương trình đào tạo (tiếng Việt):" : "Program Name (Vietnamese):", value: moetInfo.programName?.vi || '' },
-        { label: isVi ? "Tên chương trình đào tạo (tiếng Anh):" : "Program Name (English):", value: moetInfo.programName?.en || '' },
-        { label: isVi ? "Mã chương trình đào tạo:" : "Program Code:", value: moetInfo.programCode || '' },
-        { label: isVi ? "Ngành đào tạo:" : "Major:", value: moetInfo.majorName?.[language] || '' },
-        { label: isVi ? "Mã ngành đào tạo:" : "Major Code:", value: moetInfo.majorCode || '' },
+        { label: isVi ? "Tên chương trình đào tạo (tiếng Việt):" : "Program Name (Vietnamese):", value: moetInfo?.programName?.vi || '' },
+        { label: isVi ? "Tên chương trình đào tạo (tiếng Anh):" : "Program Name (English):", value: moetInfo?.programName?.en || '' },
+        { label: isVi ? "Mã chương trình đào tạo:" : "Program Code:", value: moetInfo?.programCode || '' },
+        { label: isVi ? "Ngành đào tạo:" : "Major:", value: moetInfo?.majorName?.[language] || '' },
+        { label: isVi ? "Mã ngành đào tạo:" : "Major Code:", value: moetInfo?.majorCode || '' },
         { label: isVi ? "Các chuyên ngành:" : "Specializations:", value: specsStr },
-        { label: isVi ? "Trình độ đào tạo:" : "Education Level:", value: moetInfo.level?.[language] || '' },
-        { label: isVi ? "Định hướng đào tạo:" : "Training Orientation:", value: moetInfo.trainingOrientation?.[language] || '' },
-        { label: isVi ? "Hình thức đào tạo:" : "Training Mode:", value: moetInfo.trainingMode?.[language] || '' },
-        { label: isVi ? "Ngôn ngữ đào tạo:" : "Language of Instruction:", value: moetInfo.trainingLanguage?.[language] || '' },
-        { label: isVi ? "Số học kỳ:" : "Number of Semesters:", value: moetInfo.numSemesters?.toString() || '' },
-        { label: isVi ? "Văn bằng tốt nghiệp:" : "Degree Awarded:", value: moetInfo.degreeName?.[language] || '' },
+        { label: isVi ? "Trình độ đào tạo:" : "Education Level:", value: moetInfo?.level?.[language] || '' },
+        { label: isVi ? "Định hướng đào tạo:" : "Training Orientation:", value: moetInfo?.trainingOrientation?.[language] || '' },
+        { label: isVi ? "Hình thức đào tạo:" : "Training Mode:", value: moetInfo?.trainingMode?.[language] || '' },
+        { label: isVi ? "Ngôn ngữ đào tạo:" : "Language of Instruction:", value: moetInfo?.trainingLanguage?.[language] || '' },
+        { label: isVi ? "Số học kỳ:" : "Number of Semesters:", value: moetInfo?.numSemesters?.toString() || '' },
+        { label: isVi ? "Văn bằng tốt nghiệp:" : "Degree Awarded:", value: moetInfo?.degreeName?.[language] || '' },
     ];
 
     const infoTable = new Table({
@@ -309,13 +309,13 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
     const legalBasisSection = [
         new Paragraph({ text: "", spacing: { after: 400 } }),
         createSectionHeader(isVi ? "Căn cứ xây dựng CTĐT" : "Basis for Curriculum Development"),
-        ...htmlToDocxParagraphs(moetInfo.legalBasis?.[language] || '', normalStyle, paraOptions),
+        ...htmlToDocxParagraphs(moetInfo?.legalBasis?.[language] || '', normalStyle, paraOptions),
     ];
 
     // --- Xử lý 1.2. Mục tiêu cụ thể ---
     let globalCounter = 1;
     const generateObjectiveList = (categoryCode: string) => {
-        const filteredObjs = (moetInfo.moetSpecificObjectives || []).filter(o => o.category === categoryCode);
+        const filteredObjs = (moetInfo?.moetSpecificObjectives || []).filter(o => o.category === categoryCode);
         if (filteredObjs.length === 0) return [new Paragraph({ text: "...", ...normalStyle, ...paraOptions })];
 
         return filteredObjs.map(obj => {
@@ -340,7 +340,7 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
         createSectionHeader(isVi ? "1. Mục tiêu đào tạo" : "1. Educational Objectives"),
         createSubSectionHeader(isVi ? "1.1. Mục tiêu chung" : "1.1. General Objectives"),
         // Truy xuất trực tiếp từ moetInfo.generalObjectives
-        ...htmlToDocxParagraphs(moetInfo.generalObjectives?.[language] || '', normalStyle, paraOptions),
+        ...htmlToDocxParagraphs(moetInfo?.generalObjectives?.[language] || '', normalStyle, paraOptions),
         
         createSubSectionHeader(isVi ? "1.2. Mục tiêu cụ thể" : "1.2. Specific Objectives"),
         new Paragraph({ children: [new TextRun({ text: isVi ? "a) Kiến thức" : "a) Knowledge", ...baseTextStyle, bold: true })], ...paraOptions }),
@@ -364,7 +364,7 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
         })
     ];
 
-    const sortedSpecificObjectives = [...(moetInfo.specificObjectives || [])].sort((a,b) => sortOutlineCode(a.code, b.code));
+    const sortedSpecificObjectives = [...(moetInfo?.specificObjectives || [])].sort((a,b) => sortOutlineCode(a.code, b.code));
 
     // KHỞI TẠO BIẾN ĐẾM PLO
     let ploCounter = 1;
@@ -404,7 +404,7 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
 
     const section2 = [
         createSectionHeader(isVi ? "2. Chuẩn đầu ra (SOs)" : "2. Student Outcomes (SOs)"),
-        createPara(isVi ? `Ngay khi hoàn thành chương trình đào tạo “${moetInfo.majorName?.[language] || ''}”, sinh viên có khả năng:` : `Upon completion of the “${moetInfo.majorName?.[language] || ''}” program, students are able to:`, normalStyle),
+        createPara(isVi ? `Ngay khi hoàn thành chương trình đào tạo “${moetInfo?.majorName?.[language] || ''}”, sinh viên có khả năng:` : `Upon completion of the “${moetInfo?.majorName?.[language] || ''}” program, students are able to:`, normalStyle),
         new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: mappingTableRows
@@ -464,20 +464,20 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
         createSectionHeader(isVi ? "3. Đối tượng tuyển sinh, Chuẩn đầu vào" : "3. Admission Target and Requirements"),
         createSubSectionHeader(isVi ? "3.1. Đối tượng tuyển sinh" : "3.1. Admission Target"),
         // Xuất trực tiếp từ moetInfo.admissionTarget
-        ...htmlToDocxParagraphs(moetInfo.admissionTarget?.[language] || '', normalStyle, paraOptions),
+        ...htmlToDocxParagraphs(moetInfo?.admissionTarget?.[language] || '', normalStyle, paraOptions),
         createSubSectionHeader(isVi ? "3.2. Chuẩn đầu vào" : "3.2. Admission Requirements"),
         // Xuất trực tiếp từ moetInfo.admissionReq
-        ...htmlToDocxParagraphs(moetInfo.admissionReq?.[language] || '', normalStyle, paraOptions),
+        ...htmlToDocxParagraphs(moetInfo?.admissionReq?.[language] || '', normalStyle, paraOptions),
     ];
 
     // Section 4: Quy trình
     const section4: Paragraph[] = [
         createSectionHeader(isVi ? "4. Quy trình đào tạo và điều kiện tốt nghiệp" : "4. Training Process and Graduation Requirements"),
-        ...htmlToDocxParagraphs(moetInfo.graduationReq?.[language] || '', normalStyle, paraOptions),
+        ...htmlToDocxParagraphs(moetInfo?.graduationReq?.[language] || '', normalStyle, paraOptions),
     ];
     
     // Ghi chú về điều kiện tốt nghiệp (nếu có)
-    if (moetInfo.graduationNote && moetInfo.graduationNote[language]) {
+    if (moetInfo?.graduationNote?.[language]) {
         section4.push(
             new Paragraph({
                 children: [
@@ -490,7 +490,7 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
                 ...paraOptions
             })
         );
-        section4.push(...htmlToDocxParagraphs(moetInfo.graduationNote[language], normalStyle, paraOptions));
+        section4.push(...htmlToDocxParagraphs(moetInfo?.graduationNote?.[language] || '', normalStyle, paraOptions));
     }
 
     return [

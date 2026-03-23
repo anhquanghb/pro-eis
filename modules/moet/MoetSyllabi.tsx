@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppState, Course } from '../../types';
-import { FileText, BookOpen, Calendar, Layers, AlertCircle, Download, Upload, RefreshCw } from 'lucide-react';
+import { FileText, BookOpen, Calendar, Layers, AlertCircle, Download, Upload } from 'lucide-react';
 
 interface Props {
   state: AppState;
@@ -17,7 +17,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
   const creditBlocks = globalConfigs.creditBlocks || state.creditBlocks || [];
   const { language } = state;
   const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
-  const moetInfo = currentProgram?.moetInfo || generalInfo.moetInfo || {
+  const moetInfo = currentProgram?.moetInfo || generalInfo?.moetInfo || {
     blocks: [],
     numSemesters: 8
   };
@@ -267,61 +267,6 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
     reader.readAsText(file);
   };
 
-  const handleAutoFill = () => {
-    updateState(prev => {
-      const prevGlobalState = prev.globalState || prev;
-      const prevCourses = prevGlobalState.courseCatalog || prev.courses || [];
-      
-      const newCourses = prevCourses.map((c: any) => {
-        const updated = { ...c };
-        
-        // 1. Auto-assign block if missing
-        if (!updated.blockId && updated.knowledgeAreaId) {
-          // Try to find a block with the same name as the knowledge area
-          const ka = globalConfigs.knowledgeAreas.find(k => k.id === updated.knowledgeAreaId);
-          if (ka) {
-            const matchingBlock = blocks.find(b => b.name?.[language] === ka.name?.[language]);
-            if (matchingBlock) {
-              updated.blockId = matchingBlock.id;
-            }
-          }
-        }
-
-        // 2. Auto-fill credit block values if missing
-        if (!updated.creditBlockValues || Object.keys(updated.creditBlockValues).length === 0) {
-          // If the course has a blockId, assign all credits to that block in the creditBlockValues
-          // Wait, creditBlockValues is usually for Theory/Practice/etc.
-          // Let's check what creditBlocks are.
-          // Usually they are: Theory, Practice, Exercise, etc.
-          // We can't easily auto-fill this without parsing the course description or topics.
-          // But we can at least set a default (e.g. all credits to the first block if it's "Theory")
-          const firstBlock = creditBlocks[0];
-          if (firstBlock) {
-            updated.creditBlockValues = { [firstBlock.id]: updated.credits };
-          }
-        }
-
-        return updated;
-      });
-
-      if (prev.globalState) {
-        return {
-          ...prev,
-          globalState: {
-            ...prev.globalState,
-            courseCatalog: newCourses
-          }
-        };
-      } else {
-        return {
-          ...prev,
-          courses: newCourses
-        };
-      }
-    });
-    alert(language === 'vi' ? "Tự động điền dữ liệu thành công!" : "Auto-fill successful!");
-  };
-
   // Sort courses by block order first, then semester, then code
   const sortedCourses = [...courses].sort((a, b) => {
     const indexA = blocks.findIndex(bl => bl.id === a.blockId);
@@ -371,13 +316,6 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
           </div>
           
           <div className="flex gap-1 ml-2">
-            <button
-              onClick={handleAutoFill}
-              className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 hover:bg-emerald-100 transition-colors"
-              title={language === 'vi' ? 'Tự động điền' : 'Auto-fill'}
-            >
-              <RefreshCw size={16} />
-            </button>
             <button
               onClick={exportToCSV}
               className="p-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors"

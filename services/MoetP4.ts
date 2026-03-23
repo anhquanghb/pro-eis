@@ -294,7 +294,7 @@ export const exportMoetP4 = async (generalInfo: GeneralInfo, language: Language)
             throw new Error("Missing required data for generation.");
         }
 
-        const moetInfo = generalInfo.moetInfo || {};
+        const moetInfo = generalInfo?.moetInfo || {};
         const children = generateMoetPart4(generalInfo, moetInfo, language);
         
         const doc = new Document({
