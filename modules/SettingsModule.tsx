@@ -3,7 +3,7 @@ import { AppState } from '../types';
 import { TRANSLATIONS, INITIAL_STATE } from '../constants';
 import { clearHandles } from '../utils/fileStorage';
 import { useDataSync } from '../hooks/useDataSync';
-import ConflictResolverModal from './ConflictResolverModal'; // Đảm bảo đường dẫn này đúng với thư mục components của bạn
+import ConflictResolverModal from '../components/ConflictResolverModal';
 import { 
   Save, Key, Check, AlertTriangle, RefreshCw, Trash2, MessageSquare, ChevronDown, 
   ChevronUp, Shield, ShieldOff, Info, Wrench, RotateCcw, Upload, Database
