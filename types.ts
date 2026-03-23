@@ -618,6 +618,7 @@ export interface ProgramState {
   peoConstituentMap: { peoId: string; constituentId: string }[];
   mission: Mission;
   moetInfo: MoetInfo;
+  hasInternationalAccreditation?: boolean;
 }
 
 export interface AppState {

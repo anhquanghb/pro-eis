@@ -28,12 +28,13 @@ const Layout: React.FC<LayoutProps> = ({ state, setLanguage, currentModule, setC
   const displayName = currentUser?.name || "Guest User";
   const displayRole = currentUser?.role || "VISITOR";
 
+  const selectedProgram = state.programs?.find(p => p.id === state.currentProgramId);
+
   const menuItems = [
     { id: 'cover', icon: 'fa-home', label: t.guide },
     { id: 'general', icon: 'fa-info-circle', label: t.general },
-    { id: 'transformation', icon: 'fa-random', label: t.transformation },
-    { id: 'accreditation', icon: 'fa-shield-halved', label: t.accreditation },
-    // { id: 'flowchart', icon: 'fa-diagram-project', label: t.flowchart }, // Đã ẩn module Sơ đồ
+    ...(state.currentProgramId ? [{ id: 'transformation', icon: 'fa-random', label: t.transformation }] : []),
+    ...(selectedProgram?.hasInternationalAccreditation ? [{ id: 'accreditation', icon: 'fa-shield-halved', label: t.accreditation }] : []),
     { id: 'departments', icon: 'fa-sitemap', label: t.departments },
     { id: 'syllabus', icon: 'fa-file-lines', label: t.syllabus },
     { id: 'library', icon: 'fa-book', label: t.library },
