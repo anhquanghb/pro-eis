@@ -1,0 +1,12 @@
+{
+  "systemConfig": {
+    "guestmode": "on"
+  },
+  "users": [
+    {
+      "email": "daoanhquang@duytan.edu.vn",
+      "name": "Đào Anh Quang",
+      "role": "ADMIN"
+    }
+  ]
+}
