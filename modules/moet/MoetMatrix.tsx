@@ -13,13 +13,27 @@ const MoetMatrix: React.FC<Props> = ({ state, updateState }) => {
   const globalState = state.globalState || state;
   const generalInfo = globalState.institutionInfo || state.generalInfo;
   const courses = globalState.courseCatalog || state.courses || [];
-  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId) || state;
-  const courseSoMap = currentProgram.courseSoMap || state.courseSoMap || [];
+  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+  const courseSoMap = currentProgram?.courseSoMap || state.courseSoMap || [];
   const { language } = state;
-  const moetInfo = generalInfo.moetInfo;
+  const moetInfo = currentProgram?.moetInfo || generalInfo.moetInfo || {
+    specificObjectives: [],
+    courseObjectiveMap: []
+  };
 
   const updateMoetField = (field: keyof typeof moetInfo, value: any) => {
     updateState(prev => {
+      if (prev.currentProgramId) {
+        return {
+          ...prev,
+          programs: prev.programs.map(p => 
+            p.id === prev.currentProgramId 
+              ? { ...p, moetInfo: { ...p.moetInfo, [field]: value } }
+              : p
+          )
+        };
+      }
+
       const prevGlobalState = prev.globalState || prev;
       const prevGeneralInfo = prevGlobalState.institutionInfo || prev.generalInfo;
       

@@ -22,8 +22,27 @@ interface Props {
 }
 
 const TransformationModule: React.FC<Props> = ({ state, updateState }) => {
-  const { generalInfo, courses, language, geminiConfig, faculties, teachingMethods, assessmentMethods, sos } = state;
-  const moetInfo = generalInfo.moetInfo;
+  const { language, geminiConfig } = state;
+  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+  const moetInfo = currentProgram?.moetInfo || (state as any).moetInfo || (state.generalInfo as any)?.moetInfo || {
+    programName: { vi: '', en: '' },
+    programCode: '',
+    majorName: { vi: '', en: '' },
+    majorCode: '',
+    level: { vi: '', en: '' },
+    trainingMode: { vi: '', en: '' },
+    trainingType: { vi: '', en: '' },
+    trainingLanguage: { vi: '', en: '' },
+    admissionTarget: { vi: '', en: '' },
+    admissionReq: { vi: '', en: '' },
+    graduationReq: { vi: '', en: '' },
+    gradingScale: { vi: '', en: '' },
+    implementationGuideline: { vi: '', en: '' },
+    referencedPrograms: { vi: '', en: '' },
+    generalObjectives: { vi: '', en: '' },
+    moetSpecificObjectives: [],
+    specificObjectives: []
+  };
   
   const [isTranslating, setIsTranslating] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'objectives' | 'details' | 'structure' | 'blocks' | 'matrix' | 'config' | 'syllabi' | 'export'>('info');
@@ -77,7 +96,16 @@ Content to translate: {text}`
                   }
               }
           }
-          updateState(prev => ({ ...prev, generalInfo: { ...prev.generalInfo, moetInfo: newMoet } }));
+          
+          updateState(prev => {
+              if (prev.currentProgramId && prev.programs) {
+                  return {
+                      ...prev,
+                      programs: prev.programs.map(p => p.id === prev.currentProgramId ? { ...p, moetInfo: newMoet } : p)
+                  };
+              }
+              return { ...prev, generalInfo: { ...prev.generalInfo, moetInfo: newMoet } };
+          });
       } catch (e) {
           alert("Translation failed.");
       } finally { setIsTranslating(false); }

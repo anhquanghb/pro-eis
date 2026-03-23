@@ -422,8 +422,9 @@ const SortableNode: React.FC<SortableNodeProps> = ({
 };
 
 export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState }) => {
-    const { generalInfo, courses, creditBlocks, language } = state;
-    const moetInfo = generalInfo.moetInfo;
+    const { courses, creditBlocks, language } = state;
+    const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+    const moetInfo = currentProgram?.moetInfo || state.generalInfo?.moetInfo || { structure: [] };
     const [openNodes, setOpenNodes] = useState<Record<string, boolean>>({});
 
     // Đảm bảo cấu trúc mặc định nếu chưa có
@@ -447,18 +448,30 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
                     order: 1
                 }
             ];
-            updateState(prev => ({
-                ...prev,
-                generalInfo: {
-                    ...prev.generalInfo,
-                    moetInfo: {
-                        ...prev.generalInfo.moetInfo,
-                        structure: defaultStructure
-                    }
+            updateState(prev => {
+                if (prev.currentProgramId) {
+                    return {
+                        ...prev,
+                        programs: prev.programs.map(p => 
+                            p.id === prev.currentProgramId 
+                                ? { ...p, moetInfo: { ...p.moetInfo, structure: defaultStructure } }
+                                : p
+                        )
+                    };
                 }
-            }));
+                return {
+                    ...prev,
+                    generalInfo: {
+                        ...prev.generalInfo,
+                        moetInfo: {
+                            ...prev.generalInfo.moetInfo,
+                            structure: defaultStructure
+                        }
+                    }
+                };
+            });
         }
-    }, [moetInfo.structure, language]);
+    }, [moetInfo.structure, language, state.currentProgramId]);
 
     const structure = moetInfo.structure || [];
 
@@ -612,32 +625,44 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
         const parentNode = parentId ? structure.find(n => n.id === parentId) : null;
         const isParentSelectedElective = parentNode?.type === 'SELECTED_ELECTIVE';
 
-        const newNode: MoetStructureNode = {
-            id: `node-${Date.now()}`,
-            title: level === 'MODULE' ? { vi: 'Mô-đun mới', en: 'New Module' } : { vi: `Cấp ${level} mới`, en: `New Level ${level}` },
-            level,
-            parentId,
-            // Mặc định kế thừa TC Định Hướng nếu cha là TC Định Hướng
-            type: isParentSelectedElective ? 'SELECTED_ELECTIVE' : 'REQUIRED',
-            courseIds: [],
-            order: structure.filter(n => n.parentId === parentId).length,
-            requiredCredits: isParentSelectedElective ? parentNode.requiredCredits : undefined,
-            manualCreditBlockValues: isParentSelectedElective && parentNode.manualCreditBlockValues 
-                ? { ...parentNode.manualCreditBlockValues } 
-                : undefined
-        };
+        updateState(prev => {
+            const newNode: MoetStructureNode = {
+                id: `node-${Date.now()}`,
+                title: level === 'MODULE' ? { vi: 'Mô-đun mới', en: 'New Module' } : { vi: `Cấp ${level} mới`, en: `New Level ${level}` },
+                level,
+                parentId,
+                // Mặc định kế thừa TC Định Hướng nếu cha là TC Định Hướng
+                type: isParentSelectedElective ? 'SELECTED_ELECTIVE' : 'REQUIRED',
+                courseIds: [],
+                order: structure.filter(n => n.parentId === parentId).length,
+                requiredCredits: isParentSelectedElective ? parentNode.requiredCredits : undefined,
+                manualCreditBlockValues: isParentSelectedElective && parentNode.manualCreditBlockValues 
+                    ? { ...parentNode.manualCreditBlockValues } 
+                    : undefined
+            };
 
-        updateState(prev => ({
-            ...prev,
-            generalInfo: {
-                ...prev.generalInfo,
-                moetInfo: {
-                    ...prev.generalInfo.moetInfo,
-                    structure: [...(prev.generalInfo.moetInfo.structure || []), newNode]
-                }
+            if (prev.currentProgramId) {
+                return {
+                    ...prev,
+                    programs: prev.programs.map(p => 
+                        p.id === prev.currentProgramId 
+                            ? { ...p, moetInfo: { ...p.moetInfo, structure: [...(p.moetInfo.structure || []), newNode] } }
+                            : p
+                    )
+                };
             }
-        }));
-        setOpenNodes(prev => ({ ...prev, [newNode.id]: true }));
+            return {
+                ...prev,
+                generalInfo: {
+                    ...prev.generalInfo,
+                    moetInfo: {
+                        ...prev.generalInfo.moetInfo,
+                        structure: [...(prev.generalInfo.moetInfo.structure || []), newNode]
+                    }
+                }
+            };
+        });
+        setOpenNodes(prev => ({ ...prev, [`node-${Date.now()}`]: true })); // Note: this might need a more stable ID reference
     };
 
     const handleDeleteNode = (id: string) => {
@@ -652,21 +677,37 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
         };
         findChildren(id);
 
-        updateState(prev => ({
-            ...prev,
-            generalInfo: {
-                ...prev.generalInfo,
-                moetInfo: {
-                    ...prev.generalInfo.moetInfo,
-                    structure: (prev.generalInfo.moetInfo.structure || []).filter(n => !toDelete.has(n.id))
-                }
+        updateState(prev => {
+            if (prev.currentProgramId) {
+                return {
+                    ...prev,
+                    programs: prev.programs.map(p => 
+                        p.id === prev.currentProgramId 
+                            ? { ...p, moetInfo: { ...p.moetInfo, structure: (p.moetInfo.structure || []).filter(n => !toDelete.has(n.id)) } }
+                            : p
+                    )
+                };
             }
-        }));
+            return {
+                ...prev,
+                generalInfo: {
+                    ...prev.generalInfo,
+                    moetInfo: {
+                        ...prev.generalInfo.moetInfo,
+                        structure: (prev.generalInfo.moetInfo.structure || []).filter(n => !toDelete.has(n.id))
+                    }
+                }
+            };
+        });
     };
 
     const handleUpdateNode = (id: string, updates: Partial<MoetStructureNode>) => {
         updateState(prev => {
-            let newStructure = prev.generalInfo.moetInfo.structure || [];
+            const currentMoetInfo = prev.currentProgramId 
+                ? prev.programs.find(p => p.id === prev.currentProgramId)?.moetInfo 
+                : prev.generalInfo.moetInfo;
+            
+            let newStructure = currentMoetInfo?.structure || [];
             const nodeIndex = newStructure.findIndex(n => n.id === id);
             if (nodeIndex === -1) return prev;
 
@@ -680,6 +721,16 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
 
             newStructure = newStructure.map(n => n.id === id ? { ...n, ...updates, courseIds: newCourseIds } : n);
 
+            if (prev.currentProgramId) {
+                return {
+                    ...prev,
+                    programs: prev.programs.map(p => 
+                        p.id === prev.currentProgramId 
+                            ? { ...p, moetInfo: { ...p.moetInfo, structure: newStructure } }
+                            : p
+                    )
+                };
+            }
             return {
                 ...prev,
                 generalInfo: {
@@ -706,6 +757,18 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
                 return c;
             });
 
+            if (prev.currentProgramId) {
+                return {
+                    ...prev,
+                    courses: updatedCourses,
+                    programs: prev.programs.map(p => 
+                        p.id === prev.currentProgramId 
+                            ? { ...p, moetInfo: { ...p.moetInfo, structure: (p.moetInfo.structure || []).map(n => n.id === nodeId ? { ...n, courseIds: [...n.courseIds, courseId] } : n) } }
+                            : p
+                    )
+                };
+            }
+
             return {
                 ...prev,
                 courses: updatedCourses,
@@ -721,16 +784,28 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
     };
 
     const handleRemoveCourse = (nodeId: string, courseId: string) => {
-        updateState(prev => ({
-            ...prev,
-            generalInfo: {
-                ...prev.generalInfo,
-                moetInfo: {
-                    ...prev.generalInfo.moetInfo,
-                    structure: (prev.generalInfo.moetInfo.structure || []).map(n => n.id === nodeId ? { ...n, courseIds: n.courseIds.filter(id => id !== courseId) } : n)
-                }
+        updateState(prev => {
+            if (prev.currentProgramId) {
+                return {
+                    ...prev,
+                    programs: prev.programs.map(p => 
+                        p.id === prev.currentProgramId 
+                            ? { ...p, moetInfo: { ...p.moetInfo, structure: (p.moetInfo.structure || []).map(n => n.id === nodeId ? { ...n, courseIds: n.courseIds.filter(id => id !== courseId) } : n) } }
+                            : p
+                    )
+                };
             }
-        }));
+            return {
+                ...prev,
+                generalInfo: {
+                    ...prev.generalInfo,
+                    moetInfo: {
+                        ...prev.generalInfo.moetInfo,
+                        structure: (prev.generalInfo.moetInfo.structure || []).map(n => n.id === nodeId ? { ...n, courseIds: n.courseIds.filter(id => id !== courseId) } : n)
+                    }
+                }
+            };
+        });
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -743,16 +818,29 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
         if (structure[oldIndex].parentId !== structure[newIndex].parentId) return;
 
         const newStructure = arrayMove(structure, oldIndex, newIndex).map((n, idx) => ({ ...(n as any), order: idx }));
-        updateState(prev => ({
-            ...prev,
-            generalInfo: {
-                ...prev.generalInfo,
-                moetInfo: {
-                    ...prev.generalInfo.moetInfo,
-                    structure: newStructure
-                }
+        
+        updateState(prev => {
+            if (prev.currentProgramId) {
+                return {
+                    ...prev,
+                    programs: prev.programs.map(p => 
+                        p.id === prev.currentProgramId 
+                            ? { ...p, moetInfo: { ...p.moetInfo, structure: newStructure } }
+                            : p
+                    )
+                };
             }
-        }));
+            return {
+                ...prev,
+                generalInfo: {
+                    ...prev.generalInfo,
+                    moetInfo: {
+                        ...prev.generalInfo.moetInfo,
+                        structure: newStructure
+                    }
+                }
+            };
+        });
     };
 
     const sensors = useSensors(

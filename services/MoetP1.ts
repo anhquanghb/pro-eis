@@ -339,8 +339,8 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
         new Paragraph({ text: "", spacing: { after: 400 } }),
         createSectionHeader(isVi ? "1. Mục tiêu đào tạo" : "1. Educational Objectives"),
         createSubSectionHeader(isVi ? "1.1. Mục tiêu chung" : "1.1. General Objectives"),
-        // Truy xuất trực tiếp từ generalInfo.moetInfo.generalObjectives
-        ...htmlToDocxParagraphs(generalInfo.moetInfo.generalObjectives?.[language] || '', normalStyle, paraOptions),
+        // Truy xuất trực tiếp từ moetInfo.generalObjectives
+        ...htmlToDocxParagraphs(moetInfo.generalObjectives?.[language] || '', normalStyle, paraOptions),
         
         createSubSectionHeader(isVi ? "1.2. Mục tiêu cụ thể" : "1.2. Specific Objectives"),
         new Paragraph({ children: [new TextRun({ text: isVi ? "a) Kiến thức" : "a) Knowledge", ...baseTextStyle, bold: true })], ...paraOptions }),
@@ -463,11 +463,11 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
     const section3 = [
         createSectionHeader(isVi ? "3. Đối tượng tuyển sinh, Chuẩn đầu vào" : "3. Admission Target and Requirements"),
         createSubSectionHeader(isVi ? "3.1. Đối tượng tuyển sinh" : "3.1. Admission Target"),
-        // Xuất trực tiếp từ generalInfo.moetInfo.admissionTarget
-        ...htmlToDocxParagraphs(generalInfo.moetInfo.admissionTarget?.[language] || '', normalStyle, paraOptions),
+        // Xuất trực tiếp từ moetInfo.admissionTarget
+        ...htmlToDocxParagraphs(moetInfo.admissionTarget?.[language] || '', normalStyle, paraOptions),
         createSubSectionHeader(isVi ? "3.2. Chuẩn đầu vào" : "3.2. Admission Requirements"),
-        // Xuất trực tiếp từ generalInfo.moetInfo.admissionReq
-        ...htmlToDocxParagraphs(generalInfo.moetInfo.admissionReq?.[language] || '', normalStyle, paraOptions),
+        // Xuất trực tiếp từ moetInfo.admissionReq
+        ...htmlToDocxParagraphs(moetInfo.admissionReq?.[language] || '', normalStyle, paraOptions),
     ];
 
     // Section 4: Quy trình

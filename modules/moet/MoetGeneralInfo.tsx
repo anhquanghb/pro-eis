@@ -14,17 +14,47 @@ interface Props {
 }
 
 const MoetGeneralInfo: React.FC<Props> = ({ state, updateState }) => {
-  const { generalInfo, language } = state;
-  const moetInfo = generalInfo.moetInfo;
+  const { language } = state;
+  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+  const moetInfo = currentProgram?.moetInfo || state.generalInfo?.moetInfo || {
+    level: { vi: '', en: '' },
+    majorName: { vi: '', en: '' },
+    majorCode: '',
+    programName: { vi: '', en: '' },
+    programCode: '',
+    specializations: [],
+    trainingMode: { vi: '', en: '' },
+    trainingLanguage: { vi: '', en: '' },
+    trainingOrientation: { vi: '', en: '' },
+    duration: '',
+    numSemesters: 8,
+    minCredits: 0,
+    degreeName: { vi: '', en: '' },
+    trainingType: { vi: '', en: '' },
+    legalBasis: { vi: '', en: '' },
+    programFaculty: []
+  };
 
   const updateMoetField = (field: keyof typeof moetInfo, value: any) => {
-    updateState(prev => ({
-      ...prev,
-      generalInfo: {
-        ...prev.generalInfo,
-        moetInfo: { ...prev.generalInfo.moetInfo, [field]: value }
+    updateState(prev => {
+      if (prev.currentProgramId) {
+        return {
+          ...prev,
+          programs: prev.programs.map(p => 
+            p.id === prev.currentProgramId 
+              ? { ...p, moetInfo: { ...p.moetInfo, [field]: value } }
+              : p
+          )
+        };
       }
-    }));
+      return {
+        ...prev,
+        generalInfo: {
+          ...prev.generalInfo,
+          moetInfo: { ...prev.generalInfo.moetInfo, [field]: value }
+        }
+      };
+    });
   };
 
   const updateMoetLangField = (field: keyof typeof moetInfo, value: string) => {

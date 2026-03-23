@@ -16,7 +16,11 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
   const globalConfigs = globalState.globalConfigs || state;
   const creditBlocks = globalConfigs.creditBlocks || state.creditBlocks || [];
   const { language } = state;
-  const moetInfo = generalInfo.moetInfo;
+  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+  const moetInfo = currentProgram?.moetInfo || generalInfo.moetInfo || {
+    blocks: [],
+    numSemesters: 8
+  };
   const blocks = moetInfo.blocks || [];
   const [activeTab, setActiveTab] = useState<TabType>('block');
   const fileInputRef = useRef<HTMLInputElement>(null);

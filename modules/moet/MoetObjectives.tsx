@@ -15,7 +15,11 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
   const peos = currentProgram.peos || state.peos || [];
   const sos = currentProgram.sos || state.sos || [];
   const { language } = state;
-  const moetInfo = generalInfo.moetInfo;
+  const moetInfo = currentProgram.moetInfo || (state as any).moetInfo || (state.generalInfo as any)?.moetInfo || {
+    generalObjectives: { vi: '', en: '' },
+    moetSpecificObjectives: [],
+    specificObjectives: []
+  };
 
   const [newObjDraft, setNewObjDraft] = useState<Partial<MoetObjective>>({ 
     code: '', 

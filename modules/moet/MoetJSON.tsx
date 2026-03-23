@@ -20,7 +20,9 @@ const MoetJSON: React.FC<Props> = ({ state, updateState }) => {
       studentOutcomes: state.studentOutcomes,
       courseSoMap: state.courseSoMap,
       creditBlocks: state.creditBlocks,
-      knowledgeAreas: state.knowledgeAreas
+      knowledgeAreas: state.knowledgeAreas,
+      programs: state.programs,
+      currentProgramId: state.currentProgramId
     };
 
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -91,7 +93,9 @@ const MoetJSON: React.FC<Props> = ({ state, updateState }) => {
             studentOutcomes: importedData.studentOutcomes || prev.studentOutcomes,
             courseSoMap: importedData.courseSoMap || prev.courseSoMap,
             creditBlocks: importedData.creditBlocks || prev.creditBlocks,
-            knowledgeAreas: importedData.knowledgeAreas || prev.knowledgeAreas
+            knowledgeAreas: importedData.knowledgeAreas || prev.knowledgeAreas,
+            programs: importedData.programs || prev.programs || [],
+            currentProgramId: importedData.currentProgramId || prev.currentProgramId
           }));
           alert(isVi ? "Nhập dữ liệu thành công!" : "Data imported successfully!");
         }
