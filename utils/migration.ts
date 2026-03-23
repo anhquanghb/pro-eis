@@ -1,138 +1,68 @@
+// src/utils/migration.ts
+import { AppState } from '../types';
 
-import { AppState, GlobalState, ProgramState } from '../types';
-import { CODE_VERSION, INITIAL_STATE } from '../constants';
-
-/**
- * Normalizes incoming data by detecting if it's in the new relational format
- * or the old flat format, and migrating if necessary.
- */
-export const normalizeIncomingData = (data: any): AppState => {
-  // 1. If data already has globalState and programs, it's a new relational state
-  if (data.globalState && data.programs && data.programs.length > 0) {
-    return {
-      ...INITIAL_STATE,
-      ...data,
-      language: data.language || 'en',
-      authEnabled: data.authEnabled !== undefined ? data.authEnabled : INITIAL_STATE.authEnabled,
-      currentUser: INITIAL_STATE.currentUser, // Do not overwrite current user session
-      users: Array.isArray(data.users) ? data.users : INITIAL_STATE.users,
-      geminiConfig: { ...INITIAL_STATE.geminiConfig, ...(data.geminiConfig || {}) },
-      version: CODE_VERSION
-    };
+export const migrateState = (oldData: any): AppState => {
+  // 1. Nếu dữ liệu tải lên đã là chuẩn mới (có mảng programs), thì trả về luôn
+  if (oldData.programs && Array.isArray(oldData.programs) && oldData.programs.length > 0) {
+    return oldData as AppState;
   }
 
-  // 2. Otherwise, it's an old flat state. Migrate it.
-  return migrateState(data);
-};
+  console.log("Phát hiện dữ liệu phiên bản cũ (v1.6.0). Đang tiến hành Migrate...");
 
-/**
- * Migrates old flat AppState to the new relational structure (globalState + programs)
- */
-export const migrateState = (oldState: any): AppState => {
-  // If it's already a new state structure, just return it with updated version
-  if (oldState.globalState && oldState.programs && oldState.programs.length > 0) {
-    return {
-      ...oldState,
-      version: CODE_VERSION
-    };
-  }
-
-  console.log("Migrating old state to new relational structure...");
-
-  // 1. Create GlobalState from flat fields
-  const globalState: GlobalState = {
-    institutionInfo: {
-      university: oldState.generalInfo?.university || { vi: '', en: '' },
-      school: oldState.generalInfo?.school || { vi: '', en: '' },
-      contact: oldState.generalInfo?.contact || { vi: '', en: '' },
-      history: oldState.generalInfo?.history || { vi: '', en: '' },
-      deliveryModes: oldState.generalInfo?.deliveryModes || { vi: '', en: '' },
-      locations: oldState.generalInfo?.locations || { vi: '', en: '' },
-      academicYear: oldState.generalInfo?.academicYear || '',
-      defaultSubjectCode: oldState.generalInfo?.defaultSubjectCode || '',
-      defaultSubjectName: oldState.generalInfo?.defaultSubjectName || { vi: '', en: '' },
-      defaultCredits: oldState.generalInfo?.defaultCredits || 3,
-      publicDisclosure: oldState.generalInfo?.publicDisclosure || { vi: '', en: '' },
-      signerTitle: oldState.generalInfo?.signerTitle,
-      signerName: oldState.generalInfo?.signerName,
-      approverTitle: oldState.generalInfo?.approverTitle,
-      approverName: oldState.generalInfo?.approverName,
-      city: oldState.generalInfo?.city,
-      previousEvaluations: oldState.generalInfo?.previousEvaluations || {
-        weaknesses: { vi: '', en: '' },
-        actions: { vi: '', en: '' },
-        status: { vi: '', en: '' }
-      }
-    },
-    globalConfigs: {
-      teachingMethods: oldState.teachingMethods || [],
-      assessmentMethods: oldState.assessmentMethods || [],
-      knowledgeAreas: oldState.knowledgeAreas || [],
-      creditBlocks: oldState.creditBlocks || [],
-      assessmentCategories: oldState.assessmentCategories || [],
-      activityGroups: oldState.activityGroups || [],
-      submissionMethods: oldState.submissionMethods || [],
-      assessmentTools: oldState.assessmentTools || [],
-      finalAssessmentMethods: oldState.finalAssessmentMethods || []
-    },
-    facultyDirectory: oldState.faculties || [],
-    organizationStructure: {
-      academicSchools: oldState.academicSchools || [],
-      academicFaculties: oldState.academicFaculties || [],
-      departments: oldState.departments || [],
-      facultyTitles: oldState.facultyTitles || { ranks: [], degrees: [], academicTitles: [], positions: [] }
-    },
-    facilitiesCatalog: oldState.facilities || [],
-    courseCatalog: oldState.courses || [],
-    library: oldState.library || [],
-    geminiConfig: oldState.geminiConfig || { model: 'gemini-3-flash-preview', prompts: {} }
-  };
-
-  // 2. Create default ProgramState from flat fields
+  // 2. Tạo ID duy nhất cho chương trình từ dữ liệu cũ
   const programId = `prog-${Date.now()}`;
-  const moetInfo = oldState.generalInfo?.moetInfo || {};
-  
-  const programState: ProgramState = {
+
+  // 3. Đóng gói dữ liệu cấp Chương trình (Program Level)
+  // Toàn bộ các môn học, chuẩn đầu ra, và ma trận của ngành Ô tô điện sẽ được gom vào đây
+  const programState = {
     id: programId,
-    programCode: moetInfo.programCode || '',
-    programName: oldState.generalInfo?.programName || moetInfo.programName || { vi: 'Chương trình mới', en: 'New Program' },
-    degreeLevel: moetInfo.level || { vi: '', en: '' },
-    programSpecificInfo: {
-      targetStudents: moetInfo.admissionTarget || { vi: '', en: '' },
-      entryRequirements: moetInfo.admissionReq || { vi: '', en: '' },
-      graduationConditions: moetInfo.graduationReq || { vi: '', en: '' },
-      assessmentMethods: moetInfo.assessmentMethods || { vi: '', en: '' },
-      admissionPlan: moetInfo.admissionPlan || { vi: '', en: '' },
-      qualityAssurancePlan: moetInfo.qualityAssurancePlan || { vi: '', en: '' },
-      implementationGuidelines: moetInfo.implementationGuideline || { vi: '', en: '' }
-    },
-    GPLO: moetInfo.generalObjectives || { vi: '', en: '' },
-    PLOs: moetInfo.moetSpecificObjectives || [],
-    LOs: moetInfo.specificObjectives || [],
-    PEOs: oldState.peos || [],
-    peoPloMap: oldState.peoPloMap || [], 
-    SOs: oldState.sos || [],
-    loSoMap: oldState.loSoMap || [], 
-    studentOutcomes: oldState.sos || [],
-    curriculumStructure: moetInfo.structure || [],
-    matrix: oldState.courseSoMap || [],
-    courseSoMap: oldState.courseSoMap || [],
-    coursePiMap: oldState.coursePiMap || [],
-    coursePeoMap: oldState.coursePeoMap || [],
-    peoSoMap: oldState.peoSoMap || [],
-    peoConstituentMap: oldState.peoConstituentMap || [],
-    mission: oldState.mission || { text: { vi: '', en: '' }, constituents: [] },
-    moetInfo: moetInfo
+    generalInfo: oldData.generalInfo || {},
+    moetInfo: oldData.generalInfo?.moetInfo || oldData.moetInfo || {},
+    mission: oldData.mission || { text: { vi: '', en: '' }, constituents: [] },
+    peos: oldData.peos || [],
+    sos: oldData.sos || [],
+    courses: oldData.courses || [],
+    peoSoMap: oldData.peoSoMap || [],
+    peoConstituentMap: oldData.peoConstituentMap || [],
+    courseSoMap: oldData.courseSoMap || [],
+    coursePiMap: oldData.coursePiMap || [],
+    coursePeoMap: oldData.coursePeoMap || [],
+    loSoMap: oldData.loSoMap || [],
+    peoPloMap: oldData.peoPloMap || []
   };
 
-  // 3. Assemble new AppState
-  const newState: AppState = {
-    ...oldState,
-    version: CODE_VERSION,
+  // 4. Đóng gói dữ liệu dùng chung toàn trường (Global State / Catalogs)
+  const globalState = {
+    geminiConfig: oldData.geminiConfig || {},
+    teachingMethods: oldData.teachingMethods || [],
+    assessmentMethods: oldData.assessmentMethods || [],
+    knowledgeAreas: oldData.knowledgeAreas || [],
+    facultyTitles: oldData.facultyTitles || {},
+    academicSchools: oldData.academicSchools || [],
+    academicFaculties: oldData.academicFaculties || [],
+    departments: oldData.departments || [],
+    assessmentCategories: oldData.assessmentCategories || [],
+    submissionMethods: oldData.submissionMethods || [],
+    assessmentTools: oldData.assessmentTools || [],
+    finalAssessmentMethods: oldData.finalAssessmentMethods || [],
+    activityGroups: oldData.activityGroups || [],
+    creditBlocks: oldData.creditBlocks || [],
+    library: oldData.library || [],
+    facultyDirectory: oldData.faculties || [], // Đổi tên faculties -> facultyDirectory
+    courseCatalog: oldData.courses || []       // Backup danh mục môn học
+  };
+
+  // 5. Ráp thành AppState mới hoàn chỉnh
+  const newState = {
+    version: "2.0.0", // Nâng cấp version
+    language: oldData.language || "vi",
+    authEnabled: oldData.authEnabled || false,
+    currentUser: oldData.currentUser || null,
+    users: oldData.users || [],
     globalState,
     programs: [programState],
     currentProgramId: programId
   };
 
-  return newState;
+  return newState as AppState;
 };

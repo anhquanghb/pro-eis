@@ -4,6 +4,7 @@ import { TRANSLATIONS, INITIAL_STATE } from '../constants';
 import { clearHandles } from '../utils/fileStorage';
 import { useDataSync } from '../hooks/useDataSync';
 import ConflictResolverModal from '../components/ConflictResolverModal';
+import { migrateState } from '../utils/migration';
 import { 
   Save, Key, Check, AlertTriangle, RefreshCw, Trash2, MessageSquare, ChevronDown, 
   ChevronUp, Shield, ShieldOff, Info, Wrench, RotateCcw, Upload, Database
@@ -47,25 +48,29 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      try {
-        const jsonData = JSON.parse(event.target?.result as string) as AppState;
-        const incomingCourses = jsonData.programs?.[0]?.courses;
+        try {
+        // 1. Đọc JSON nguyên bản (chưa biết là cũ hay mới)
+        const rawData = JSON.parse(event.target?.result as string);
+        
+        // 2. Chạy qua Migration Script để ép về chuẩn mới nhất
+        const migratedData = migrateState(rawData);
+        
+        // 3. Lấy courses từ chuẩn mới để bắt đầu quy trình Sync / Resolve Conflict
+        const incomingCourses = migratedData.programs[0]?.courses;
         
         if (incomingCourses && incomingCourses.length > 0) {
-          // Gọi hook để bắt đầu quá trình kiểm tra xung đột
-          initiateImport(incomingCourses);
+            initiateImport(incomingCourses);
         } else {
-          alert(language === 'vi' ? "Không tìm thấy dữ liệu khóa học trong file JSON để import." : "No course data found in the JSON file to import.");
+            alert(language === 'vi' ? "Không tìm thấy dữ liệu khóa học trong file JSON." : "No course data found in the JSON file.");
         }
-      } catch (error) {
-        console.error("Parse error:", error);
-        alert(language === 'vi' ? "Lỗi đọc file JSON! Định dạng không hợp lệ." : "Error parsing JSON file! Invalid format.");
-      }
+        } catch (error) {
+        console.error("Parse/Migration error:", error);
+        alert(language === 'vi' ? "Lỗi đọc file JSON! Định dạng không hợp lệ." : "Error parsing JSON file!");
+        }
     };
     reader.readAsText(file);
-    // Reset input để có thể upload lại cùng 1 file
-    e.target.value = '';
-  };
+    e.target.value = ''; // Reset input
+    };
   // ----------------------------------------------
 
   const saveConfig = () => {
