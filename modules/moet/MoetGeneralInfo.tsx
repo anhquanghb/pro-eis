@@ -91,11 +91,11 @@ const MoetGeneralInfo: React.FC<Props> = ({ state, updateState }) => {
           </div>
           <div className="p-4 border-b border-slate-100 bg-slate-50"><h3 className="font-bold text-slate-800 flex items-center gap-2"><BookOpen size={18} className="text-emerald-600"/>{language === 'vi' ? '1. Thông tin chung' : '1. General Information'}</h3></div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <InputField label={language === 'vi' ? 'Trình độ đào tạo' : 'Training Level'} value={moetInfo.level[language]} onChange={v => updateMoetLangField('level', v)} placeholder="e.g. Đại học" />
-              <InputField label={language === 'vi' ? 'Ngành đào tạo' : 'Major Name'} value={moetInfo.majorName[language]} onChange={v => updateMoetLangField('majorName', v)} placeholder="e.g. Kỹ thuật Điện" />
-              <InputField label={language === 'vi' ? 'Mã ngành đào tạo' : 'Major Code'} value={moetInfo.majorCode} onChange={v => updateMoetField('majorCode', v)} placeholder="e.g. 7520201" />
-              <InputField label={language === 'vi' ? 'Tên chương trình đào tạo' : 'Program Name'} value={moetInfo.programName[language]} onChange={v => updateMoetLangField('programName', v)} placeholder="" />
-              <InputField label={language === 'vi' ? 'Mã chương trình đào tạo' : 'Program Code'} value={moetInfo.programCode} onChange={v => updateMoetField('programCode', v)} placeholder="" />
+              <InputField label={language === 'vi' ? 'Trình độ đào tạo' : 'Training Level'} value={moetInfo.level?.[language] || ''} onChange={v => updateMoetLangField('level', v)} placeholder="e.g. Đại học" />
+              <InputField label={language === 'vi' ? 'Ngành đào tạo' : 'Major Name'} value={moetInfo.majorName?.[language] || ''} onChange={v => updateMoetLangField('majorName', v)} placeholder="e.g. Kỹ thuật Điện" />
+              <InputField label={language === 'vi' ? 'Mã ngành đào tạo' : 'Major Code'} value={moetInfo.majorCode || ''} onChange={v => updateMoetField('majorCode', v)} placeholder="e.g. 7520201" />
+              <InputField label={language === 'vi' ? 'Tên chương trình đào tạo' : 'Program Name'} value={moetInfo.programName?.[language] || ''} onChange={v => updateMoetLangField('programName', v)} placeholder="" />
+              <InputField label={language === 'vi' ? 'Mã chương trình đào tạo' : 'Program Code'} value={moetInfo.programCode || ''} onChange={v => updateMoetField('programCode', v)} placeholder="" />
               
               <div className="col-span-full space-y-2">
                 <div className="flex justify-between items-center">
@@ -114,7 +114,7 @@ const MoetGeneralInfo: React.FC<Props> = ({ state, updateState }) => {
                     <div key={idx} className="flex gap-2">
                       <input 
                         className="flex-1 p-2 text-sm border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500"
-                        value={spec[language]}
+                        value={spec?.[language] || ''}
                         onChange={e => {
                           const next = [...(moetInfo.specializations || [])];
                           next[idx] = { ...next[idx], [language]: e.target.value };
@@ -133,14 +133,14 @@ const MoetGeneralInfo: React.FC<Props> = ({ state, updateState }) => {
                 </div>
               </div>
 
-              <InputField label={language === 'vi' ? 'Hình thức đào tạo' : 'Training Mode'} value={moetInfo.trainingMode[language]} onChange={v => updateMoetLangField('trainingMode', v)} placeholder="e.g. Chính quy" />
-              <InputField label={language === 'vi' ? 'Ngôn ngữ đào tạo' : 'Training Language'} value={moetInfo.trainingLanguage[language]} onChange={v => updateMoetLangField('trainingLanguage', v)} placeholder="e.g. Tiếng Việt" />
+              <InputField label={language === 'vi' ? 'Hình thức đào tạo' : 'Training Mode'} value={moetInfo.trainingMode?.[language] || ''} onChange={v => updateMoetLangField('trainingMode', v)} placeholder="e.g. Chính quy" />
+              <InputField label={language === 'vi' ? 'Ngôn ngữ đào tạo' : 'Training Language'} value={moetInfo.trainingLanguage?.[language] || ''} onChange={v => updateMoetLangField('trainingLanguage', v)} placeholder="e.g. Tiếng Việt" />
               <InputField label={language === 'vi' ? 'Định hướng đào tạo' : 'Training Orientation'} value={moetInfo.trainingOrientation?.[language] || ''} onChange={v => updateMoetLangField('trainingOrientation', v)} placeholder="e.g. Định hướng nghề nghiệp" />
-              <InputField label={language === 'vi' ? 'Thời gian đào tạo (năm)' : 'Duration (years)'} value={moetInfo.duration} onChange={v => updateMoetField('duration', v)} placeholder="e.g. 4" />
+              <InputField label={language === 'vi' ? 'Thời gian đào tạo (năm)' : 'Duration (years)'} value={moetInfo.duration || ''} onChange={v => updateMoetField('duration', v)} placeholder="e.g. 4" />
               <InputField label={language === 'vi' ? 'Số học kỳ' : 'Number of Semesters'} value={moetInfo.numSemesters?.toString() || ''} onChange={v => updateMoetField('numSemesters', parseInt(v) || 0)} type="number" />
               <InputField label={language === 'vi' ? 'Số tín chỉ tích lũy tối thiểu' : 'Min Cumulative Credits'} value={moetInfo.minCredits?.toString() || ''} onChange={v => updateMoetField('minCredits', parseInt(v) || 0)} type="number" />
               <InputField label={language === 'vi' ? 'Văn bằng tốt nghiệp' : 'Graduation Diploma'} value={moetInfo.degreeName?.[language] || ''} onChange={v => updateMoetLangField('degreeName', v)} placeholder="e.g. Cử nhân" />
-              <InputField label={language === 'vi' ? 'Phương thức đào tạo' : 'Training Type'} value={moetInfo.trainingType[language]} onChange={v => updateMoetLangField('trainingType', v)} placeholder="Tập trung" />
+              <InputField label={language === 'vi' ? 'Phương thức đào tạo' : 'Training Type'} value={moetInfo.trainingType?.[language] || ''} onChange={v => updateMoetLangField('trainingType', v)} placeholder="Tập trung" />
               
               <div className="col-span-full">
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">

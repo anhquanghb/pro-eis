@@ -434,7 +434,7 @@ export const generateMoetPart2 = (
     // 6.1. Đánh giá kết quả học tập
     sections.push(createPara(isVi ? "6.1. Đánh giá kết quả học tập" : "6.1. Assessment of learning outcomes", styles.h2));
     if (moetInfo.assessmentMethods) {
-        sections.push(...htmlToDocxParagraphs(moetInfo.assessmentMethods[language] || "", styles.body, { spacing: { after: 120, line: 276 } }));
+        sections.push(...htmlToDocxParagraphs(moetInfo.assessmentMethods?.[language] || "", styles.body, { spacing: { after: 120, line: 276 } }));
     } else {
         sections.push(new Paragraph({ text: "", spacing: { after: 120 } }));
     }
@@ -442,7 +442,7 @@ export const generateMoetPart2 = (
     // 6.2. Phương pháp đánh giá mức độ đạt chuẩn đầu ra của CTĐT đối với người học
     sections.push(createPara(isVi ? "6.2. Phương pháp đánh giá mức độ đạt chuẩn đầu ra của CTĐT đối với người học" : "6.2. Methods for assessing the level of achievement of the program's learning outcomes for learners", styles.h2));
     if (moetInfo.assessmentPloMethod) {
-        sections.push(...htmlToDocxParagraphs(moetInfo.assessmentPloMethod[language] || "", styles.body, { spacing: { after: 120, line: 276 } }));
+        sections.push(...htmlToDocxParagraphs(moetInfo.assessmentPloMethod?.[language] || "", styles.body, { spacing: { after: 120, line: 276 } }));
     } else {
         sections.push(new Paragraph({ text: "", spacing: { after: 120 } }));
     }
@@ -482,7 +482,7 @@ export const exportMoetP2 = async (
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `MOET_Part2_${generalInfo.programName[language].replace(/\s+/g, '_')}.docx`;
+        link.download = `MOET_Part2_${(generalInfo.programName?.[language] || 'Program').replace(/\s+/g, '_')}.docx`;
         link.click();
     } catch (e) {
         console.error(e);

@@ -154,15 +154,15 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
 
     // Add credit block acronyms
     creditBlocks.forEach(cb => {
-      headers.push(cb.acronym[language] || cb.name[language]);
+      headers.push(cb.acronym?.[language] || cb.name?.[language] || '');
     });
 
     const rows = courses.map(c => {
       const block = blocks.find(b => b.id === c.blockId);
       const row = [
         c.code,
-        `"${c.name[language].replace(/"/g, '""')}"`,
-        block ? `"${block.name[language].replace(/"/g, '""')}"` : '',
+        `"${(c.name?.[language] || '').replace(/"/g, '""')}"`,
+        block ? `"${(block.name?.[language] || '').replace(/"/g, '""')}"` : '',
         c.semester.toString(),
         c.credits.toString()
       ];
@@ -225,7 +225,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
         const semester = parseInt(parts[3]) || 1;
         const credits = parseInt(parts[4]) || 0;
 
-        const block = blocks.find(b => b.name[language] === blockName);
+        const block = blocks.find(b => b.name?.[language] === blockName);
         
         newCourses[courseIndex] = {
           ...newCourses[courseIndex],
@@ -237,7 +237,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
 
         // Map credit block values
         creditBlocks.forEach((cb, cbIdx) => {
-          const headerName = cb.acronym[language] || cb.name[language];
+          const headerName = cb.acronym?.[language] || cb.name?.[language] || '';
           const headerIdx = headers.indexOf(headerName);
           if (headerIdx !== -1 && parts[headerIdx]) {
             newCourses[courseIndex].creditBlockValues![cb.id] = parseInt(parts[headerIdx]) || 0;
@@ -353,8 +353,8 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
                     {language === 'vi' ? 'Học phần' : 'Course'}
                   </th>
                   {blocks.map(b => (
-                    <th key={b.id} className="border border-slate-200 p-2 text-center text-xs font-bold text-slate-600 max-w-[120px] sticky top-0 bg-slate-50 z-20 shadow-[0_1px_0_0_#e2e8f0]" title={b.name[language]}>
-                      <div className="truncate">{b.name[language]}</div>
+                    <th key={b.id} className="border border-slate-200 p-2 text-center text-xs font-bold text-slate-600 max-w-[120px] sticky top-0 bg-slate-50 z-20 shadow-[0_1px_0_0_#e2e8f0]" title={b.name?.[language] || ''}>
+                      <div className="truncate">{b.name?.[language] || ''}</div>
                     </th>
                   ))}
                 </tr>
@@ -364,7 +364,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="border border-slate-200 p-2 text-xs font-medium text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 z-10 shadow-[1px_0_0_0_#e2e8f0]">
                       <div className="font-bold text-indigo-700">{c.code}</div>
-                      <div className="truncate w-56" title={c.name[language]}>{c.name[language]}</div>
+                      <div className="truncate w-56" title={c.name?.[language] || ''}>{c.name?.[language] || ''}</div>
                     </td>
                     {blocks.map(b => (
                       <td key={b.id} className="border border-slate-200 p-2 text-center">
@@ -374,7 +374,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
                           checked={c.blockId === b.id}
                           onChange={() => updateCourseBlock(c.id, b.id)}
                           className="w-4 h-4 text-indigo-600 cursor-pointer"
-                          title={b.name[language]} // Hiển thị tooltip tên khối khi lướt chuột
+                          title={b.name?.[language] || ''} // Hiển thị tooltip tên khối khi lướt chuột
                         />
                       </td>
                     ))}
@@ -406,7 +406,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="border border-slate-200 p-2 text-xs font-medium text-slate-700 sticky left-0 bg-white group-hover:bg-slate-50 z-10 shadow-[1px_0_0_0_#e2e8f0]">
                       <div className="font-bold text-indigo-700">{c.code}</div>
-                      <div className="truncate w-56" title={c.name[language]}>{c.name[language]}</div>
+                      <div className="truncate w-56" title={c.name?.[language] || ''}>{c.name?.[language] || ''}</div>
                     </td>
                     {Array.from({ length: numSemesters }).map((_, i) => (
                       <td key={i} className="border border-slate-200 p-2 text-center">
@@ -441,7 +441,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
                   </th>
                   {creditBlocks.map(cb => (
                     <th key={cb.id} className="border border-slate-200 p-2 text-center text-xs font-bold text-slate-600 w-24 sticky top-0 bg-slate-50 z-20 shadow-[0_1px_0_0_#e2e8f0]">
-                      {cb.acronym[language] || cb.name[language]}
+                      {cb.acronym?.[language] || cb.name?.[language] || ''}
                     </th>
                   ))}
                   <th className="border border-slate-200 p-2 text-center text-xs font-bold text-slate-600 w-16 sticky top-0 bg-slate-50 z-20 shadow-[0_1px_0_0_#e2e8f0]">
@@ -464,7 +464,7 @@ const MoetSyllabi: React.FC<Props> = ({ state, updateState }) => {
                     >
                       <td className={`border border-slate-200 p-2 text-xs font-medium text-slate-700 sticky left-0 z-10 transition-colors duration-700 shadow-[1px_0_0_0_#e2e8f0] ${highlightedCourseId === c.id ? 'bg-blue-100' : 'bg-white'}`}>
                         <div className="font-bold text-indigo-700">{c.code}</div>
-                        <div className="truncate w-56" title={c.name[language]}>{c.name[language]}</div>
+                        <div className="truncate w-56" title={c.name?.[language] || ''}>{c.name?.[language] || ''}</div>
                       </td>
                       <td className={`border border-slate-200 p-2 text-center text-xs font-bold text-slate-600 transition-colors duration-700 ${highlightedCourseId === c.id ? 'bg-blue-100/50' : 'bg-slate-50'}`}>
                         {c.credits}

@@ -305,8 +305,8 @@ const SortableNode: React.FC<SortableNodeProps> = ({
                         <input 
                             type="text"
                             className="w-full font-semibold text-slate-800 bg-transparent border border-transparent hover:border-slate-300 hover:bg-white focus:bg-white focus:border-indigo-500 rounded px-2 py-0.5 outline-none transition-all cursor-pointer focus:cursor-text truncate min-w-[150px]"
-                            value={node.title[language] || ''}
-                            onChange={(e) => onUpdateNode({ title: { ...node.title, [language]: e.target.value } })}
+                            value={node.title?.[language] || ''}
+                            onChange={(e) => onUpdateNode({ title: { ...(node.title || {}), [language]: e.target.value } })}
                             placeholder={language === 'vi' ? "Nhập tiêu đề..." : "Enter title..."}
                             onClick={(e) => e.stopPropagation()}
                         />
@@ -428,7 +428,7 @@ export const MoetStructure: React.FC<MoetStructureProps> = ({ state, updateState
     const [openNodes, setOpenNodes] = useState<Record<string, boolean>>({});
 
     // Đảm bảo cấu trúc mặc định nếu chưa có
-    useMemo(() => {
+    useEffect(() => {
         if (!moetInfo.structure || moetInfo.structure.length === 0) {
             const defaultStructure: MoetStructureNode[] = [
                 {

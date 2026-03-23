@@ -28,7 +28,8 @@ const MoetExport: React.FC<Props> = ({ state }) => {
   const assessmentMethods = globalConfigs.assessmentMethods || state.assessmentMethods || [];
   
   const { language, sos, facultyTitles, courseSoMap, facilities, departments, academicFaculties, academicSchools, creditBlocks } = state;
-  const moetInfo = generalInfo.moetInfo;
+  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+  const moetInfo = currentProgram?.moetInfo || generalInfo.moetInfo || { specificObjectives: [] };
   const [isExporting, setIsExporting] = useState(false);
 
   // Helper for matrix sorting needed for export

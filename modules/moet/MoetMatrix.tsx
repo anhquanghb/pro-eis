@@ -123,7 +123,7 @@ const MoetMatrix: React.FC<Props> = ({ state, updateState }) => {
                         {sortedObjectives.map(obj => (
                             <th key={obj.id} className="p-2 border-b border-slate-200 text-center min-w-[40px] text-[10px] font-bold text-slate-600 bg-slate-50 group relative cursor-help">
                                 {getObjectiveLabel(obj.id)}
-                                <div className="absolute hidden group-hover:block z-50 bottom-full left-1/2 -translate-x-1/2 w-48 p-2 bg-slate-800 text-white rounded shadow-lg font-normal text-left">{obj.description[language]}</div>
+                                <div className="absolute hidden group-hover:block z-50 bottom-full left-1/2 -translate-x-1/2 w-48 p-2 bg-slate-800 text-white rounded shadow-lg font-normal text-left">{obj.description?.[language] || ''}</div>
                             </th>
                         ))}
                     </tr>
@@ -134,7 +134,7 @@ const MoetMatrix: React.FC<Props> = ({ state, updateState }) => {
                             <td className="p-3 border-r border-slate-200 sticky left-0 bg-white z-10">
                                 <div className="flex flex-col">
                                     <span className="font-bold text-slate-700 text-xs">{c.code}</span>
-                                    <span className="text-[10px] text-slate-500 font-normal line-clamp-2 leading-tight" title={c.name[language]}>{c.name[language]}</span>
+                                    <span className="text-[10px] text-slate-500 font-normal line-clamp-2 leading-tight" title={c.name?.[language] || ''}>{c.name?.[language] || ''}</span>
                                 </div>
                             </td>
                             {sortedObjectives.map(obj => {

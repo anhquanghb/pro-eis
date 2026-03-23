@@ -50,9 +50,9 @@ const SortableBlock: React.FC<SortableBlockProps> = ({ block, language, updateBl
         <GripVertical size={16} />
       </div>
       <div className="pl-4">
-        <InputField label={language === 'vi' ? 'Tên khối (VI)' : 'Block Name (VI)'} value={block.name.vi} onChange={v => updateBlockLang(block.id, 'name', 'vi', v)} />
+        <InputField label={language === 'vi' ? 'Tên khối (VI)' : 'Block Name (VI)'} value={block.name?.vi || ''} onChange={v => updateBlockLang(block.id, 'name', 'vi', v)} />
       </div>
-      <InputField label={language === 'vi' ? 'Tên khối (EN)' : 'Block Name (EN)'} value={block.name.en} onChange={v => updateBlockLang(block.id, 'name', 'en', v)} />
+      <InputField label={language === 'vi' ? 'Tên khối (EN)' : 'Block Name (EN)'} value={block.name?.en || ''} onChange={v => updateBlockLang(block.id, 'name', 'en', v)} />
       <div className="flex items-end gap-2">
         <button onClick={() => deleteBlock(block.id)} className="text-slate-300 hover:text-red-500 mb-2"><Trash2 size={18}/></button>
       </div>
@@ -69,7 +69,8 @@ const MoetBlocks: React.FC<Props> = ({ state, updateState }) => {
   const globalState = state.globalState || state;
   const generalInfo = globalState.institutionInfo || state.generalInfo;
   const { language } = state;
-  const moetInfo = generalInfo.moetInfo;
+  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+  const moetInfo = currentProgram?.moetInfo || generalInfo.moetInfo || { blocks: [] };
   const blocks = moetInfo.blocks || [];
 
   const sensors = useSensors(
@@ -81,6 +82,17 @@ const MoetBlocks: React.FC<Props> = ({ state, updateState }) => {
 
   const updateMoetField = (field: keyof typeof moetInfo, value: any) => {
     updateState(prev => {
+      if (prev.currentProgramId) {
+        return {
+          ...prev,
+          programs: prev.programs.map(p => 
+            p.id === prev.currentProgramId 
+              ? { ...p, moetInfo: { ...p.moetInfo, [field]: value } }
+              : p
+          )
+        };
+      }
+
       const prevGlobalState = prev.globalState || prev;
       const prevGeneralInfo = prevGlobalState.institutionInfo || prev.generalInfo;
       

@@ -190,7 +190,7 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
                                 alignment: AlignmentType.CENTER
                             }),
                             new Paragraph({
-                                children: [new TextRun({ text: generalInfo.university[language].toUpperCase(), ...baseTextStyle, size: 26, bold: true })],
+                                children: [new TextRun({ text: generalInfo.university?.[language]?.toUpperCase() || '', ...baseTextStyle, size: 26, bold: true })],
                                 ...tableParaOptions,
                                 alignment: AlignmentType.CENTER
                             })
@@ -239,7 +239,7 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
             alignment: AlignmentType.CENTER 
         }),
         new Paragraph({ 
-            children: [new TextRun({ text: isVi ? `của Giám đốc ${generalInfo.university[language]})` : `of the Director of ${generalInfo.university[language]})`, ...baseTextStyle, italics: true })], 
+            children: [new TextRun({ text: isVi ? `của Giám đốc ${generalInfo.university?.[language] || ''})` : `of the Director of ${generalInfo.university?.[language] || ''})`, ...baseTextStyle, italics: true })], 
             ...headingParaOptions,
             alignment: AlignmentType.CENTER,
             spacing: { after: 400 }
@@ -253,18 +253,18 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
     }).join('\n');
 
     const infoFields = [
-        { label: isVi ? "Tên chương trình đào tạo (tiếng Việt):" : "Program Name (Vietnamese):", value: moetInfo.programName.vi },
-        { label: isVi ? "Tên chương trình đào tạo (tiếng Anh):" : "Program Name (English):", value: moetInfo.programName.en },
-        { label: isVi ? "Mã chương trình đào tạo:" : "Program Code:", value: moetInfo.programCode },
-        { label: isVi ? "Ngành đào tạo:" : "Major:", value: moetInfo.majorName[language] },
-        { label: isVi ? "Mã ngành đào tạo:" : "Major Code:", value: moetInfo.majorCode },
+        { label: isVi ? "Tên chương trình đào tạo (tiếng Việt):" : "Program Name (Vietnamese):", value: moetInfo.programName?.vi || '' },
+        { label: isVi ? "Tên chương trình đào tạo (tiếng Anh):" : "Program Name (English):", value: moetInfo.programName?.en || '' },
+        { label: isVi ? "Mã chương trình đào tạo:" : "Program Code:", value: moetInfo.programCode || '' },
+        { label: isVi ? "Ngành đào tạo:" : "Major:", value: moetInfo.majorName?.[language] || '' },
+        { label: isVi ? "Mã ngành đào tạo:" : "Major Code:", value: moetInfo.majorCode || '' },
         { label: isVi ? "Các chuyên ngành:" : "Specializations:", value: specsStr },
-        { label: isVi ? "Trình độ đào tạo:" : "Education Level:", value: moetInfo.level[language] },
-        { label: isVi ? "Định hướng đào tạo:" : "Training Orientation:", value: moetInfo.trainingOrientation?.[language] },
-        { label: isVi ? "Hình thức đào tạo:" : "Training Mode:", value: moetInfo.trainingMode[language] },
-        { label: isVi ? "Ngôn ngữ đào tạo:" : "Language of Instruction:", value: moetInfo.trainingLanguage[language] },
-        { label: isVi ? "Số học kỳ:" : "Number of Semesters:", value: moetInfo.numSemesters?.toString() },
-        { label: isVi ? "Văn bằng tốt nghiệp:" : "Degree Awarded:", value: moetInfo.degreeName?.[language] },
+        { label: isVi ? "Trình độ đào tạo:" : "Education Level:", value: moetInfo.level?.[language] || '' },
+        { label: isVi ? "Định hướng đào tạo:" : "Training Orientation:", value: moetInfo.trainingOrientation?.[language] || '' },
+        { label: isVi ? "Hình thức đào tạo:" : "Training Mode:", value: moetInfo.trainingMode?.[language] || '' },
+        { label: isVi ? "Ngôn ngữ đào tạo:" : "Language of Instruction:", value: moetInfo.trainingLanguage?.[language] || '' },
+        { label: isVi ? "Số học kỳ:" : "Number of Semesters:", value: moetInfo.numSemesters?.toString() || '' },
+        { label: isVi ? "Văn bằng tốt nghiệp:" : "Degree Awarded:", value: moetInfo.degreeName?.[language] || '' },
     ];
 
     const infoTable = new Table({
@@ -404,7 +404,7 @@ export const generateMoetPart1 = (generalInfo: GeneralInfo, moetInfo: MoetInfo, 
 
     const section2 = [
         createSectionHeader(isVi ? "2. Chuẩn đầu ra (SOs)" : "2. Student Outcomes (SOs)"),
-        createPara(isVi ? `Ngay khi hoàn thành chương trình đào tạo “${moetInfo.majorName[language]}”, sinh viên có khả năng:` : `Upon completion of the “${moetInfo.majorName[language]}” program, students are able to:`, normalStyle),
+        createPara(isVi ? `Ngay khi hoàn thành chương trình đào tạo “${moetInfo.majorName?.[language] || ''}”, sinh viên có khả năng:` : `Upon completion of the “${moetInfo.majorName?.[language] || ''}” program, students are able to:`, normalStyle),
         new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: mappingTableRows
@@ -529,7 +529,7 @@ export const exportMoetP1 = async (generalInfo: GeneralInfo, moetInfo: MoetInfo,
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `MOET_Part1_${generalInfo.programName[language].replace(/\s+/g, '_')}.docx`;
+        link.download = `MOET_Part1_${(generalInfo.programName?.[language] || 'Program').replace(/\s+/g, '_')}.docx`;
         link.click();
     } catch (e) {
         console.error(e);

@@ -11,11 +11,11 @@ interface Props {
 const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
   const globalState = state.globalState || state;
   const generalInfo = globalState.institutionInfo || state.generalInfo;
-  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId) || state;
-  const peos = currentProgram.peos || state.peos || [];
-  const sos = currentProgram.sos || state.sos || [];
+  const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+  const peos = currentProgram?.peos || state.peos || [];
+  const sos = currentProgram?.sos || state.sos || [];
   const { language } = state;
-  const moetInfo = currentProgram.moetInfo || (state as any).moetInfo || (state.generalInfo as any)?.moetInfo || {
+  const moetInfo = currentProgram?.moetInfo || state.generalInfo?.moetInfo || {
     generalObjectives: { vi: '', en: '' },
     moetSpecificObjectives: [],
     specificObjectives: []
@@ -55,6 +55,17 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
 
   const updateMoetField = (field: keyof typeof moetInfo, value: any) => {
     updateState(prev => {
+      if (prev.currentProgramId) {
+        return {
+          ...prev,
+          programs: prev.programs.map(p => 
+            p.id === prev.currentProgramId 
+              ? { ...p, moetInfo: { ...p.moetInfo, [field]: value } }
+              : p
+          )
+        };
+      }
+
       const prevGlobalState = prev.globalState || prev;
       const prevGeneralInfo = prevGlobalState.institutionInfo || prev.generalInfo;
       
@@ -179,7 +190,7 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
                     </div>
                     <h3 className="text-base font-bold text-slate-800">{language === 'vi' ? '2.1 Mục tiêu chung' : '2.1 General Objectives'}</h3>
                 </div>
-                <FullFormatText value={moetInfo.generalObjectives[language]} onChange={v => updateMoetLangField('generalObjectives', v)} />
+                <FullFormatText value={moetInfo.generalObjectives?.[language] || ''} onChange={v => updateMoetLangField('generalObjectives', v)} />
             </div>
             
             {/* 2.2 */}
@@ -210,7 +221,7 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
                           </div>
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                               <div className="lg:col-span-8">
-                                  <textarea className="w-full p-3 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 transition-colors min-h-[60px]" value={obj.description[language]} onChange={e => updateMoetSpecificObjectiveDesc(obj.id, e.target.value)} placeholder="..." />
+                                  <textarea className="w-full p-3 text-sm bg-white border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 transition-colors min-h-[60px]" value={obj.description?.[language] || ''} onChange={e => updateMoetSpecificObjectiveDesc(obj.id, e.target.value)} placeholder="..." />
                               </div>
                               <div className="lg:col-span-4 space-y-2"><label className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1"><Link2 size={10}/> Linked PEOs</label><div className="flex flex-wrap gap-1">{peos.map(peo => (<button key={peo.id} onClick={() => toggleMoetSpecificObjectivePeo(obj.id, peo.id)} className={`px-2 py-1 rounded text-[10px] font-bold border transition-all ${obj.peoIds?.includes(peo.id) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-400 border-slate-200 hover:border-indigo-300'}`}>{peo.code}</button>))}</div></div>
                           </div>
@@ -245,7 +256,7 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
                                           <input 
                                               type="text"
                                               className={`flex-1 p-1 text-sm bg-white border border-slate-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 transition-colors ${level === 1 ? 'font-bold' : 'font-semibold'}`}
-                                              value={o.description[language]} 
+                                              value={o.description?.[language] || ''} 
                                               onChange={e => updateObjectiveDesc(o.id, e.target.value)} 
                                               onBlur={() => setEditingObjectiveId(null)}
                                               placeholder="..."
@@ -254,7 +265,7 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
                                   ) : (
                                       <>
                                           <span className="w-16 p-1 text-xs font-bold text-left shrink-0">{o.code}</span>
-                                          <span className={`flex-1 p-1 text-sm ${level === 1 ? 'font-bold' : 'font-semibold'}`}>{o.description[language]}</span>
+                                          <span className={`flex-1 p-1 text-sm ${level === 1 ? 'font-bold' : 'font-semibold'}`}>{o.description?.[language] || ''}</span>
                                       </>
                                   )}
                                   <button onClick={(e) => { e.stopPropagation(); deleteObjective(o.id); }} className="text-slate-300 hover:text-red-500 transition-colors shrink-0"><Trash2 size={16}/></button>
@@ -283,13 +294,13 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
                                            {editingObjectiveId === o.id ? (
                                                <textarea 
                                                    className="w-full p-2 text-sm bg-white border border-slate-200 rounded outline-none focus:ring-1 focus:ring-indigo-500 transition-colors min-h-[60px]"
-                                                   value={o.description[language]} 
+                                                   value={o.description?.[language] || ''} 
                                                    onChange={e => updateObjectiveDesc(o.id, e.target.value)} 
                                                    onBlur={() => setEditingObjectiveId(null)}
                                                    placeholder="..."
                                                />
                                            ) : (
-                                               <span className="w-full p-1 text-sm block leading-relaxed">{o.description[language]}</span>
+                                               <span className="w-full p-1 text-sm block leading-relaxed">{o.description?.[language] || ''}</span>
                                            )}
                                        </div>
                                        <div className="lg:col-span-2">
@@ -333,7 +344,7 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
                                                                <CheckSquare size={10}/> {so.code}
                                                            </div>
                                                            <div className="leading-relaxed opacity-90">
-                                                               {so.description[language]}
+                                                                {so.description?.[language] || ''}
                                                            </div>
                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                                                        </div>
@@ -435,7 +446,7 @@ const MoetObjectives: React.FC<Props> = ({ state, updateState }) => {
                                                   <CheckSquare size={10}/> {so.code}
                                               </div>
                                               <div className="leading-relaxed opacity-90">
-                                                  {so.description[language]}
+                                                  {so.description?.[language] || ''}
                                               </div>
                                               <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-900"></div>
                                           </div>

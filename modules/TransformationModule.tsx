@@ -82,7 +82,7 @@ Content to translate: {text}`
           }
           if (newMoet.specificObjectives) {
               for (const obj of newMoet.specificObjectives) {
-                  if (!obj.description[language] && obj.description[otherLang]) {
+                  if (obj.description && !obj.description[language] && obj.description[otherLang]) {
                       const trans = await translateContent(obj.description[otherLang], language, structuralConfig);
                       if (trans) obj.description[language] = trans;
                   }
@@ -90,7 +90,7 @@ Content to translate: {text}`
           }
           if (newMoet.moetSpecificObjectives) {
               for (const obj of newMoet.moetSpecificObjectives) {
-                  if (!obj.description[language] && obj.description[otherLang]) {
+                  if (obj.description && !obj.description[language] && obj.description[otherLang]) {
                       const trans = await translateContent(obj.description[otherLang], language, structuralConfig);
                       if (trans) obj.description[language] = trans;
                   }
