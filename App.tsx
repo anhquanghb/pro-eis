@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { migrateState } from './utils/migration';
 import { AppState, MoetSubBlock, TeachingMethod, AssessmentMethod } from './types';
 import { INITIAL_STATE, CODE_VERSION } from './constants';
 import Layout from './components/Layout';
@@ -130,7 +131,13 @@ const App: React.FC = () => {
   const [state, setState] = useState<AppState>(() => {
     try {
         const saved = localStorage.getItem('appState');
-        const parsed = saved ? JSON.parse(saved) : INITIAL_STATE;
+        let parsed = saved ? JSON.parse(saved) : INITIAL_STATE;
+        
+        // If version is older, we might want to migrate immediately
+        if (parsed.version !== CODE_VERSION) {
+            parsed = migrateState(parsed);
+        }
+
         // Ensure creditBlocks are loaded if empty
         if (!parsed.creditBlocks || parsed.creditBlocks.length === 0) {
             parsed.creditBlocks = INITIAL_STATE.creditBlocks;
@@ -383,253 +390,9 @@ const App: React.FC = () => {
 
   // --- REPAIR DATA LOGIC ---
   const handleRepairData = () => {
-    // 1. Repair Faculty Titles (Standardize)
-    const newFacultyTitles = {
-        ranks: state.facultyTitles?.ranks || INITIAL_STATE.facultyTitles.ranks,
-        degrees: state.facultyTitles?.degrees || INITIAL_STATE.facultyTitles.degrees,
-        academicTitles: state.facultyTitles?.academicTitles || INITIAL_STATE.facultyTitles.academicTitles,
-        positions: state.facultyTitles?.positions || INITIAL_STATE.facultyTitles.positions,
-    };
-
-    // 2. Organization Structure Repair
-    const newSchools = Array.isArray(state.academicSchools) ? state.academicSchools : (INITIAL_STATE.academicSchools || []);
-    const newAcademicFaculties = Array.isArray(state.academicFaculties) ? state.academicFaculties : (INITIAL_STATE.academicFaculties || []);
-    const newDepartments = Array.isArray(state.departments) ? state.departments : (INITIAL_STATE.departments || []);
-
-    // 3. Course Field Repair
-    const newCourses = (state.courses || []).map(c => ({
-        ...c,
-        isEssential: c.isEssential ?? false,
-        isAbet: c.isAbet !== undefined ? c.isAbet : (c.isEssential ?? false),
-        knowledgeAreaId: c.knowledgeAreaId || 'other',
-        type: c.type || 'REQUIRED',
-        departmentId: c.departmentId || undefined,
-        managingUnitId: c.managingUnitId || c.departmentId || undefined,
-        managingUnitType: c.managingUnitType || (c.departmentId ? 'DEPARTMENT' : undefined),
-        instructorIds: c.instructorIds || [],
-        instructorDetails: c.instructorDetails || {},
-        textbooks: c.textbooks || [],
-        topics: c.topics || [],
-        assessmentPlan: c.assessmentPlan || [],
-        objectives: c.objectives || {
-            general: { vi: '', en: '' },
-            specific: { knowledge: [], skills: [], responsibility: [] }
-        },
-        assessmentConfigType: c.assessmentConfigType || 'THEORY',
-        theoryAssessmentConfig: {
-            processWeight: 50, 
-            attendanceWeight: 10, 
-            participationWeight: 10, 
-            midtermWeight: 10, 
-            finalProcessWeight: 10, 
-            selfStudyWeight: 10, 
-            finalExamWeight: 50, 
-            finalExamForm: 'Tự luận', 
-            finalExamDuration: 90, 
-            finalExamAllowMaterials: false,
-            ...(c.theoryAssessmentConfig || {}),
-            finalExamForms: c.theoryAssessmentConfig?.finalExamForms || [],
-            regularTests: c.theoryAssessmentConfig?.regularTests || []
-        },
-        practiceAssessmentConfig: c.practiceAssessmentConfig || {
-            criteriaType: 'DESCRIPTION',
-            criteria: '',
-            rubric: { levels: [], criteria: [] },
-            items: []
-        },
-        projectAssessmentConfig: c.projectAssessmentConfig || {
-            criteriaType: 'DESCRIPTION',
-            criteria: '',
-            rubric: { levels: [], criteria: [] }
-        },
-        scheduleNumWeeks: c.scheduleNumWeeks || 15,
-        schedule: c.schedule || [],
-        teachingMethodsDescription: c.teachingMethodsDescription || { vi: '', en: '' },
-        coursePolicies: c.coursePolicies || { vi: '', en: '' },
-        classOrganizationForm: c.classOrganizationForm || { vi: '', en: '' },
-        clos: c.clos && Array.isArray(c.clos.vi) && Array.isArray(c.clos.en) ? c.clos : { vi: [], en: [] },
-        cloMap: Array.isArray(c.cloMap) ? c.cloMap : [],
-        coRequisites: c.coRequisites || []
-    }));
-
-    // 4. Faculties Repair
-    const newFaculties = (state.faculties || []).map(f => ({
-        ...f,
-        departmentId: f.departmentId || undefined,
-        unitId: f.unitId || f.departmentId || undefined,
-        unitType: f.unitType || (f.departmentId ? 'DEPARTMENT' : undefined),
-        contactAddress: f.contactAddress || '',
-        researchDirections: f.researchDirections || { vi: '', en: '' },
-        careerStartYear: f.careerStartYear || 2020,
-        certificationsList: f.certificationsList || [],
-        membershipsList: f.membershipsList || [],
-        honorsList: f.honorsList || [],
-        serviceActivitiesList: f.serviceActivitiesList || [],
-        professionalDevelopmentList: f.professionalDevelopmentList || []
-    }));
-    const defaultMoet = INITIAL_STATE.generalInfo.moetInfo;
-    const currentMoet = state.generalInfo.moetInfo || defaultMoet;
-
-    let subBlocks: MoetSubBlock[] = (currentMoet.subBlocks || []).map(sb => ({
-        ...sb,
-        type: sb.type || 'ELECTIVE'
-    }));
-
-    const rawStructure = (currentMoet.programStructure || {}) as any;
-    const structure = {
-        gen: rawStructure.gen || [],
-        phys: rawStructure.phys || [],
-        fund: rawStructure.fund || [],
-        spec: rawStructure.spec || [],
-        grad: rawStructure.grad || []
-    };
-
-    (['gen', 'phys', 'fund', 'spec', 'grad'] as const).forEach(key => {
-        const ids = structure[key] || [];
-        if (ids.length > 0) {
-            const hasCompulsory = subBlocks.some(sb => sb.parentBlockId === key && sb.type === 'COMPULSORY');
-            if (!hasCompulsory) {
-                const newBlock: MoetSubBlock = {
-                    id: `sb-migrated-${key}-${Date.now()}`,
-                    name: { vi: 'Các học phần bắt buộc', en: 'Compulsory Courses' },
-                    parentBlockId: key,
-                    type: 'COMPULSORY',
-                    minCredits: 0,
-                    courseIds: [...ids],
-                    note: { vi: 'Tự động tạo từ dữ liệu cũ', en: 'Auto-migrated from legacy data' }
-                };
-                subBlocks.push(newBlock);
-            }
-        }
-    });
-
-    const newMoetInfo = {
-        ...defaultMoet,
-        ...currentMoet,
-        programName: currentMoet.programName || defaultMoet.programName,
-        generalObjectives: currentMoet.generalObjectives || defaultMoet.generalObjectives,
-        legalBasis: currentMoet.legalBasis || defaultMoet.legalBasis,
-        specializations: currentMoet.specializations || [],
-        subBlocks: subBlocks,
-        programStructure: structure,
-        moetSpecificObjectives: currentMoet.moetSpecificObjectives || [],
-        specificObjectives: currentMoet.specificObjectives || defaultMoet.specificObjectives,
-        programFaculty: currentMoet.programFaculty || []
-    };
-
-    // 6. General Info Repair
-    const defaultGeneral = INITIAL_STATE.generalInfo;
-    const currentGeneral = state.generalInfo || defaultGeneral;
-    const newGeneralInfo = {
-        ...defaultGeneral,
-        ...currentGeneral,
-        previousEvaluations: {
-            ...defaultGeneral.previousEvaluations,
-            ...(currentGeneral.previousEvaluations || {})
-        },
-        moetInfo: newMoetInfo
-    };
-
-    const newLibrary = (state.library || []).map(l => ({ ...l, isEbook: l.isEbook ?? false, isPrinted: l.isPrinted ?? true }));
-    const newFacilities = state.facilities || [];
-
-    // 7. Assessment Config Repair (Sync with constants.ts)
-    const newAssessmentCategories = INITIAL_STATE.assessmentCategories || [];
-    const newSubmissionMethods = INITIAL_STATE.submissionMethods || [];
-    const newAssessmentTools = INITIAL_STATE.assessmentTools || [];
-    const newFinalAssessmentMethods = INITIAL_STATE.finalAssessmentMethods || [];
-    const newActivityGroups = INITIAL_STATE.activityGroups || [];
-    const newCreditBlocks = (state.creditBlocks && state.creditBlocks.length > 0) ? state.creditBlocks : INITIAL_STATE.creditBlocks;
-
-    // --- NEW: Method Detection for Sync ---
-    const detectedCandidates: SyncCandidate[] = [];
-    
-    // Check Teaching Methods
-    const newTeachingMethods = INITIAL_STATE.teachingMethods;
-    const currentTeachingMethods = state.teachingMethods || [];
-    
-    // Find methods in current state that do NOT match IDs in new standard list
-    const legacyTeaching = currentTeachingMethods.filter(tm => !newTeachingMethods.some(ntm => ntm.id === tm.id));
-    
-    legacyTeaching.forEach(tm => {
-        // Attempt auto-match by Code or Name
-        const bestMatch = newTeachingMethods.find(ntm => 
-            ntm.code === tm.code || 
-            (tm.name && ntm.name.vi === tm.name.vi) || 
-            (tm.name && ntm.name.en === tm.name.en)
-        );
-        detectedCandidates.push({
-            id: tm.id,
-            name: `${tm.code || ''} - ${tm.name ? (tm.name[state.language] || tm.name.vi || tm.name.en || '') : ''}`,
-            type: 'teaching',
-            bestMatchId: bestMatch ? bestMatch.id : null
-        });
-    });
-
-    // Check Assessment Methods
-    const newAssessmentMethods = INITIAL_STATE.assessmentMethods;
-    const currentAssessmentMethods = state.assessmentMethods || [];
-    const legacyAssessment = currentAssessmentMethods.filter(am => !newAssessmentMethods.some(nam => nam.id === am.id));
-
-    legacyAssessment.forEach(am => {
-        const bestMatch = newAssessmentMethods.find(nam => 
-            (am.name && nam.name.vi === am.name.vi) || 
-            (am.name && nam.name.en === am.name.en)
-        );
-        detectedCandidates.push({
-            id: am.id,
-            name: am.name ? (am.name[state.language] || am.name.vi || am.name.en || '') : '',
-            type: 'assessment',
-            bestMatchId: bestMatch ? bestMatch.id : null
-        });
-    });
-
-    // --- Apply Repairs ---
-    updateState(prev => ({
-        ...prev,
-        // version: CODE_VERSION, // DEFER VERSION UPDATE UNTIL SYNC IS DONE if candidates exist
-        authEnabled: prev.authEnabled ?? false,
-        geminiConfig: {
-            ...prev.geminiConfig,
-            prompts: prev.geminiConfig?.prompts || INITIAL_STATE.geminiConfig.prompts
-        },
-        academicSchools: newSchools,
-        academicFaculties: newAcademicFaculties,
-        departments: newDepartments, 
-        facultyTitles: newFacultyTitles,
-        // DO NOT OVERWRITE METHODS YET if we have candidates
-        // If no candidates, we can safely assume standard or empty, so we use new ones
-        teachingMethods: detectedCandidates.length === 0 ? newTeachingMethods : prev.teachingMethods,
-        assessmentMethods: detectedCandidates.length === 0 ? newAssessmentMethods : prev.assessmentMethods,
-        courses: newCourses,
-        faculties: newFaculties,
-        facilities: newFacilities,
-        library: newLibrary,
-        generalInfo: newGeneralInfo,
-        assessmentCategories: newAssessmentCategories,
-        submissionMethods: newSubmissionMethods,
-        assessmentTools: newAssessmentTools,
-        finalAssessmentMethods: newFinalAssessmentMethods,
-        activityGroups: newActivityGroups,
-        creditBlocks: newCreditBlocks
-    }));
-
+    updateState(prev => migrateState(prev));
     setShowVersionModal(false);
-
-    if (detectedCandidates.length > 0) {
-        setSyncCandidates(detectedCandidates);
-        // Pre-fill map with best matches
-        const initialMap: Record<string, string> = {};
-        detectedCandidates.forEach(c => {
-            if (c.bestMatchId) initialMap[c.id] = c.bestMatchId;
-        });
-        setSyncMap(initialMap);
-        setShowSyncModal(true);
-    } else {
-        // No conflicts, just update version now
-        updateState(prev => ({ ...prev, version: CODE_VERSION }));
-        alert(state.language === 'vi' ? "Đã sửa chữa, đồng bộ dữ liệu và cập nhật phiên bản!" : "Data repaired, synced, and version updated!");
-    }
+    alert(state.language === 'vi' ? "Cập nhật dữ liệu thành công!" : "Data updated successfully!");
   };
 
   const handleFinalizeSync = () => {

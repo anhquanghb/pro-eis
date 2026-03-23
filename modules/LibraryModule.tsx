@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { AppState, LibraryResource } from '../types';
+import { AppState, LibraryResource, Course } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { Search, Plus, Trash2, Edit2, BookOpen, Download, Link as LinkIcon, Check, X, Filter, Save, ScanSearch, ArrowRight, CopyPlus, AlertCircle, Calendar, Table as TableIcon } from 'lucide-react';
 

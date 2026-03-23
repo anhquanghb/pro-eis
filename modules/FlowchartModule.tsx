@@ -488,7 +488,7 @@ const FlowchartModule: React.FC<Props> = ({ state, updateState, onCourseNavigate
     let maxRowHeight = 0;
     let maxBlockBottom = gridBottomY;
 
-    (generalInfo.moetInfo.subBlocks || []).forEach(sb => {
+    (moetInfo.subBlocks || []).forEach(sb => {
         const coursesInBlock = sb.courseIds.map(cid => targetCourses.find(c => c.id === cid)).filter(Boolean) as Course[];
         if (coursesInBlock.length === 0) return;
 

@@ -39,49 +39,55 @@ export const exportMoetDocx = async (...args: any[]) => {
             } as unknown as AppState;
         }
 
-        const globalState = state.globalState || state;
-        const globalConfigs = globalState.globalConfigs || state;
-        const organizationStructure = globalState.organizationStructure || state;
+        const globalState = state.globalState;
+        const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
         
-        const generalInfo = globalState.institutionInfo || state.generalInfo;
-        const courses = globalState.courseCatalog || state.courses || [];
-        const faculties = organizationStructure.faculties || state.faculties || [];
-        const teachingMethods = globalConfigs.teachingMethods || state.teachingMethods || [];
-        const knowledgeAreas = globalConfigs.knowledgeAreas || state.knowledgeAreas || [];
+        const institutionInfo = globalState?.institutionInfo || state.generalInfo;
+        const courses = globalState?.courseCatalog || state.courses || [];
+        const faculties = globalState?.facultyDirectory || state.faculties || [];
+        const teachingMethods = globalState?.globalConfigs?.teachingMethods || state.teachingMethods || [];
+        const knowledgeAreas = globalState?.globalConfigs?.knowledgeAreas || state.knowledgeAreas || [];
+        const assessmentMethods = globalState?.globalConfigs?.assessmentMethods || state.assessmentMethods || [];
         
+        const fullGeneralInfo = {
+            ...institutionInfo,
+            programName: currentProgram?.programName || (state.generalInfo as any)?.programName || '',
+            moetInfo: currentProgram?.moetInfo || (state.generalInfo as any)?.moetInfo || { subBlocks: [], specificObjectives: [] }
+        } as any;
+
         const {
             language = 'vi',
             courseSoMap = [],
             creditBlocks = []
         } = state;
 
-        if (!generalInfo) {
+        if (!institutionInfo) {
             throw new Error("Dữ liệu GeneralInfo bị trống hoặc không hợp lệ!");
         }
 
-        const moetInfo = generalInfo.moetInfo || (state as any).moetInfo || {};
+        const moetInfo = fullGeneralInfo.moetInfo;
         const safeBlocks: CreditBlock[] = (creditBlocks && creditBlocks.length > 0) ? creditBlocks : [];
 
         // --- SECTION 1: MAIN CONTENT (Part 1 - Part 4) ---
         const mainSectionChildren: any[] = [];
 
         // Part 1
-        const part1 = generateMoetPart1(generalInfo, moetInfo, courses, language);
+        const part1 = generateMoetPart1(fullGeneralInfo, moetInfo, courses, language);
         mainSectionChildren.push(...part1);
         // Đã xóa PageBreak ở đây để văn bản nối tiếp
 
         // Part 2
-        const part2 = generateMoetPart2(generalInfo, moetInfo, courses, teachingMethods, faculties, language, safeBlocks);
+        const part2 = generateMoetPart2(fullGeneralInfo, moetInfo, courses, teachingMethods, faculties, language, safeBlocks);
         mainSectionChildren.push(...part2);
         // Đã xóa PageBreak ở đây để văn bản nối tiếp
 
         // Part 3
-        const part3 = generateMoetPart3(generalInfo, moetInfo, courses, language, courseSoMap);
+        const part3 = generateMoetPart3(fullGeneralInfo, moetInfo, courses, language, courseSoMap);
         mainSectionChildren.push(...part3);
         // Đã xóa PageBreak ở đây để văn bản nối tiếp
 
         // Part 4
-        const part4 = generateMoetPart4(generalInfo, moetInfo, language);
+        const part4 = generateMoetPart4(fullGeneralInfo, moetInfo, language);
         mainSectionChildren.push(...part4);
 
         // --- SECTION 2: APPENDIX (FULL SYLLABI) ---
@@ -204,10 +210,10 @@ export const exportMoetDocx = async (...args: any[]) => {
         link.href = url;
 
         let progName = "Program";
-        if (generalInfo?.programName) {
-            progName = typeof generalInfo.programName === 'string' 
-                ? generalInfo.programName 
-                : (generalInfo.programName[language] || generalInfo.programName.vi || "Program");
+        if (fullGeneralInfo?.programName) {
+            progName = typeof fullGeneralInfo.programName === 'string' 
+                ? fullGeneralInfo.programName 
+                : (fullGeneralInfo.programName[language] || fullGeneralInfo.programName.vi || "Program");
         }
         const safeProgName = progName.replace(/[\/\\]/g, '_');
 

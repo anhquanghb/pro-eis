@@ -41,10 +41,10 @@ export const syllabusPart4Service = {
     language: 'vi' | 'en';
   }) {
     const { course, state, language = 'vi' } = data;
-    const globalState = state.globalState || state;
-    const currentProgram = state.programs?.find(p => p.id === state.currentProgramId) || state;
-    const globalConfigs = globalState.globalConfigs || state;
-    const generalInfo = globalState.institutionInfo || state.generalInfo;
+    const globalState = state.globalState;
+    const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+    const globalConfigs = globalState?.globalConfigs;
+    const generalInfo = globalState?.institutionInfo || state.generalInfo;
 
     // --- 1. HTML PARSER HELPER ---
     const parseHtmlToDocx = (html: string): Paragraph[] => {
@@ -141,30 +141,32 @@ export const syllabusPart4Service = {
 
         let parts: string[] = [];
         
+        const org = globalState?.organizationStructure;
+        
         // 1. Dò tìm trong cấp Bộ môn (Department)
-        const dept = (globalState.departments || state.departments || []).find(d => d.id === unitId);
+        const dept = (org?.departments || state.departments || []).find(d => d.id === unitId);
         if (dept) {
             if (dept.name?.[language]) parts.push(dept.name[language]);
-            const fac = (globalState.academicFaculties || state.academicFaculties || []).find(f => f.id === dept.academicFacultyId);
+            const fac = (org?.academicFaculties || state.academicFaculties || []).find(f => f.id === dept.academicFacultyId);
             if (fac) {
                 if (fac.name?.[language]) parts.push(fac.name[language]);
-                const sch = (globalState.academicSchools || state.academicSchools || []).find(s => s.id === fac.schoolId);
+                const sch = (org?.academicSchools || state.academicSchools || []).find(s => s.id === fac.schoolId);
                 if (sch && sch.name?.[language]) parts.push(sch.name[language]);
             }
             return parts.join(', ');
         }
 
         // 2. Dò tìm trong cấp Khoa (Faculty)
-        const fac = (globalState.academicFaculties || state.academicFaculties || []).find(f => f.id === unitId);
+        const fac = (org?.academicFaculties || state.academicFaculties || []).find(f => f.id === unitId);
         if (fac) {
             if (fac.name?.[language]) parts.push(fac.name[language]);
-            const sch = (globalState.academicSchools || state.academicSchools || []).find(s => s.id === fac.schoolId);
+            const sch = (org?.academicSchools || state.academicSchools || []).find(s => s.id === fac.schoolId);
             if (sch && sch.name?.[language]) parts.push(sch.name[language]);
             return parts.join(', ');
         }
 
         // 3. Dò tìm trong cấp Trường (School)
-        const sch = (globalState.academicSchools || state.academicSchools || []).find(s => s.id === unitId);
+        const sch = (org?.academicSchools || state.academicSchools || []).find(s => s.id === unitId);
         if (sch) {
             if (sch.name?.[language]) parts.push(sch.name[language]);
             return parts.join(', ');
@@ -481,7 +483,7 @@ export const syllabusPart4Service = {
           // 11. Giảng viên
           createHeading(t.section11),
           ...course.instructorIds.map((id, idx) => {
-            const f = (globalState.organizationStructure?.faculties || state.faculties).find((fac: any) => fac.id === id);
+            const f = (globalState?.facultyDirectory || state.faculties || []).find((fac: any) => fac.id === id);
             if (!f) return [];
 
             const academicTitle = f.academicTitle?.[language];

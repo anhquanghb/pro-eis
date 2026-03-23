@@ -1,5 +1,6 @@
 
 import React, { useState, useRef } from 'react';
+import { migrateState } from '../utils/migration';
 import { AppState, Faculty, Course, LibraryResource, GeneralInfo } from '../types';
 import { FileJson, Upload, X, AlertTriangle, Check, Copy, Plus, BookOpen, Merge, RefreshCw, Search, Info, ExternalLink, Sparkles, Database, Download, CheckCircle2, ListFilter, Code, History, FileText, Save, Trash2 } from 'lucide-react';
 import { INITIAL_STATE, TRANSLATIONS } from '../constants';
@@ -619,76 +620,21 @@ const JSONInputModule: React.FC<Props> = ({ state, updateState, onExport, recent
 
   // --- Logic: Full System Import/Export (Moved from Settings) ---
   const normalizeIncomingData = (data: any): AppState => {
-      // 1. Start with Initial State as baseline to ensure structure
-      const base: AppState = JSON.parse(JSON.stringify(INITIAL_STATE));
-
-      // If data already has globalState and programs, it's a new relational state
-      if (data.globalState && data.programs) {
+      // 1. If data already has globalState and programs, it's a new relational state
+      if (data.globalState && data.programs && data.programs.length > 0) {
           return {
-              ...base,
+              ...INITIAL_STATE,
               ...data,
               language: data.language || 'en',
-              authEnabled: data.authEnabled !== undefined ? data.authEnabled : base.authEnabled,
-              currentUser: base.currentUser, // Do not overwrite current user session
-              users: Array.isArray(data.users) ? data.users : base.users,
-              geminiConfig: { ...base.geminiConfig, ...(data.geminiConfig || {}) },
+              authEnabled: data.authEnabled !== undefined ? data.authEnabled : INITIAL_STATE.authEnabled,
+              currentUser: INITIAL_STATE.currentUser, // Do not overwrite current user session
+              users: Array.isArray(data.users) ? data.users : INITIAL_STATE.users,
+              geminiConfig: { ...INITIAL_STATE.geminiConfig, ...(data.geminiConfig || {}) },
           };
       }
 
-      // Otherwise, it's an old flat state. We normalize it to the old structure,
-      // and let the app handle it (or we can migrate it here, but for now we just return it as flat state)
-      const mergedGeneralInfo: GeneralInfo = {
-          ...base.generalInfo,
-          ...(data.generalInfo || {}),
-          previousEvaluations: { ...base.generalInfo.previousEvaluations, ...(data.generalInfo?.previousEvaluations || {}) },
-          moetInfo: {
-              ...base.generalInfo.moetInfo,
-              ...(data.generalInfo?.moetInfo || {}),
-              programStructure: { ...base.generalInfo.moetInfo.programStructure, ...(data.generalInfo?.moetInfo?.programStructure || {}) }
-          }
-      };
-
-      const normalizedCourses = Array.isArray(data.courses) ? data.courses.map((c: any) => ({
-          ...c,
-          credits: typeof c.credits === 'number' ? c.credits : 0,
-          isEssential: !!c.isEssential,
-          isAbet: c.isAbet !== undefined ? c.isAbet : !!c.isEssential,
-          departmentId: c.departmentId,
-          instructorDetails: c.instructorDetails || {},
-          cloMap: Array.isArray(c.cloMap) ? c.cloMap.map((cm: any) => ({ ...cm, piIds: Array.isArray(cm.piIds) ? cm.piIds : [] })) : [],
-          textbooks: Array.isArray(c.textbooks) ? c.textbooks : [],
-          topics: Array.isArray(c.topics) ? c.topics : [],
-          assessmentPlan: Array.isArray(c.assessmentPlan) ? c.assessmentPlan : []
-      })) : [];
-
-      return {
-          ...base,
-          language: data.language || 'en',
-          authEnabled: data.authEnabled !== undefined ? data.authEnabled : base.authEnabled,
-          currentUser: base.currentUser,
-          users: Array.isArray(data.users) ? data.users : base.users,
-          mission: data.mission || base.mission,
-          peos: Array.isArray(data.peos) ? data.peos : [],
-          sos: Array.isArray(data.sos) ? data.sos : [],
-          courses: normalizedCourses,
-          faculties: Array.isArray(data.faculties) ? data.faculties : [],
-          academicSchools: Array.isArray(data.academicSchools) ? data.academicSchools : base.academicSchools,
-          academicFaculties: Array.isArray(data.academicFaculties) ? data.academicFaculties : base.academicFaculties,
-          departments: Array.isArray(data.departments) ? data.departments : base.departments,
-          facilities: Array.isArray(data.facilities) ? data.facilities : [],
-          knowledgeAreas: Array.isArray(data.knowledgeAreas) ? data.knowledgeAreas : base.knowledgeAreas,
-          teachingMethods: Array.isArray(data.teachingMethods) ? data.teachingMethods : base.teachingMethods,
-          assessmentMethods: Array.isArray(data.assessmentMethods) ? data.assessmentMethods : base.assessmentMethods,
-          facultyTitles: data.facultyTitles || base.facultyTitles,
-          geminiConfig: { ...base.geminiConfig, ...(data.geminiConfig || {}) },
-          generalInfo: mergedGeneralInfo,
-          library: Array.isArray(data.library) ? data.library : [],
-          courseSoMap: Array.isArray(data.courseSoMap) ? data.courseSoMap : [],
-          coursePiMap: Array.isArray(data.coursePiMap) ? data.coursePiMap : [],
-          coursePeoMap: Array.isArray(data.coursePeoMap) ? data.coursePeoMap : [],
-          peoSoMap: Array.isArray(data.peoSoMap) ? data.peoSoMap : [],
-          peoConstituentMap: Array.isArray(data.peoConstituentMap) ? data.peoConstituentMap : [],
-      };
+      // 2. Otherwise, it's an old flat state. Migrate it.
+      return migrateState(data);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

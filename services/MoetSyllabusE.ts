@@ -97,12 +97,12 @@ export const generateFullSyllabusElements = async (
     language: Language,
     state: AppState // Truyền toàn bộ AppState hoặc fauxState vào đây
 ) => {
-    const globalState = state.globalState || state;
-    const globalConfigs = globalState.globalConfigs || state;
-    const courseCatalog = globalState.courseCatalog || state.courses;
-    const generalInfo = globalState.institutionInfo || state.generalInfo;
-    const teachingMethods = globalConfigs.teachingMethods || state.teachingMethods;
-    const knowledgeAreas = globalConfigs.knowledgeAreas || state.knowledgeAreas;
+    const globalState = state.globalState;
+    const globalConfigs = globalState?.globalConfigs;
+    const courseCatalog = globalState?.courseCatalog || state.courses || [];
+    const generalInfo = globalState?.institutionInfo || state.generalInfo;
+    const teachingMethods = globalConfigs?.teachingMethods || state.teachingMethods || [];
+    const knowledgeAreas = globalConfigs?.knowledgeAreas || state.knowledgeAreas || [];
 
     const elements: any[] = [];
     const syllabusHeader = language === 'vi' ? "ĐỀ CƯƠNG CHI TIẾT HỌC PHẦN" : "DETAILED COURSE SYLLABUS";
@@ -203,14 +203,16 @@ export const downloadSingleSyllabus = async (
 
 // --- HÀM XUẤT TOÀN BỘ ĐỀ CƯƠNG CHI TIẾT VÀO 1 FILE WORD ĐỘC LẬP ---
 export const exportMoetSyllabus = async (state: AppState) => {
-    const globalState = state.globalState || state;
-    const courseCatalog = globalState.courseCatalog || state.courses;
-    const generalInfo = globalState.institutionInfo || state.generalInfo;
+    const globalState = state.globalState;
+    const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
+    const courseCatalog = globalState?.courseCatalog || state.courses || [];
+    const generalInfo = globalState?.institutionInfo || state.generalInfo;
+    const moetInfo = currentProgram?.moetInfo || state.generalInfo?.moetInfo;
     const { language } = state;
     try {
         const physIds = new Set<string>();
-        (generalInfo.moetInfo?.programStructure?.phys || []).forEach((id: string) => physIds.add(id));
-        (generalInfo.moetInfo?.subBlocks || []).forEach((sb: any) => {
+        (moetInfo?.programStructure?.phys || []).forEach((id: string) => physIds.add(id));
+        (moetInfo?.subBlocks || []).forEach((sb: any) => {
             if (sb.parentBlockId === 'phys') {
                 sb.courseIds.forEach((id: string) => physIds.add(id));
             }
@@ -226,7 +228,7 @@ export const exportMoetSyllabus = async (state: AppState) => {
             return ids;
         };
 
-        const structureNodes = generalInfo.moetInfo?.structure || [];
+        const structureNodes = moetInfo?.structure || [];
         const orderedCourseIds = getCourseIdsInOrder(structureNodes);
         const uniqueOrderedIds = Array.from(new Set(orderedCourseIds)).filter(id => !physIds.has(id));
         const orderedCourses = uniqueOrderedIds.map(id => courseCatalog.find((c: any) => c.id === id)).filter((c): c is Course => !!c);
@@ -290,7 +292,8 @@ export const exportMoetSyllabus = async (state: AppState) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `MOET_Full_Syllabus_${generalInfo.programName[language].replace(/\s+/g, '_')}.docx`;
+        const progName = currentProgram?.programName?.[language] || (state.generalInfo as any)?.programName?.[language] || "Program";
+        link.download = `MOET_Full_Syllabus_${progName.replace(/\s+/g, '_')}.docx`;
         link.click();
     } catch (e) {
         console.error(e);

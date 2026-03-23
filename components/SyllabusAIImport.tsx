@@ -10,20 +10,20 @@ interface SyllabusAIImportProps {
 }
 
 const getSyllabusFullAiPrompt = (state: AppState) => {
-    const globalState = state.globalState || state;
-    const currentProgram = state.programs?.find(p => p.id === state.currentProgramId) || state;
-    const globalConfigs = globalState.globalConfigs || state;
-    const generalInfo = globalState.institutionInfo || state.generalInfo;
-    const organizationStructure = globalState.organizationStructure || state;
+    const globalState = state.globalState;
+    const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
     
-    const teachingMethods = globalConfigs.teachingMethods || state.teachingMethods;
-    const assessmentMethods = globalConfigs.assessmentMethods || state.assessmentMethods;
-    const assessmentCategories = globalConfigs.assessmentCategories || state.assessmentCategories;
-    const submissionMethods = globalConfigs.submissionMethods || state.submissionMethods;
-    const assessmentTools = globalConfigs.assessmentTools || state.assessmentTools;
-    const finalAssessmentMethods = globalConfigs.finalAssessmentMethods || state.finalAssessmentMethods;
-    const faculties = organizationStructure.faculties || state.faculties;
-    const sos = (currentProgram as any).sos || state.sos;
+    const teachingMethods = globalState?.globalConfigs?.teachingMethods || state.teachingMethods || [];
+    const assessmentMethods = globalState?.globalConfigs?.assessmentMethods || state.assessmentMethods || [];
+    const assessmentCategories = globalState?.globalConfigs?.assessmentCategories || state.assessmentCategories || [];
+    const submissionMethods = globalState?.globalConfigs?.submissionMethods || state.submissionMethods || [];
+    const assessmentTools = globalState?.globalConfigs?.assessmentTools || state.assessmentTools || [];
+    const finalAssessmentMethods = globalState?.globalConfigs?.finalAssessmentMethods || state.finalAssessmentMethods || [];
+    
+    const faculties = globalState?.facultyDirectory || state.faculties || [];
+    const sos = currentProgram?.SOs || state.sos || [];
+    const generalInfo = globalState?.institutionInfo || state.generalInfo;
+    const moetInfo = currentProgram?.moetInfo || state.generalInfo?.moetInfo;
 
     const teachingMethodsStr = teachingMethods.map((m: any) => `ID: ${m.id} - Tên: ${m.name.vi}`).join(', ');
     const assessmentMethodsStr = assessmentMethods.map((m: any) => `ID: ${m.id} - Tên: ${m.name.vi}`).join(', ');
@@ -36,7 +36,7 @@ const getSyllabusFullAiPrompt = (state: AppState) => {
     const facultiesStr = faculties.map((f: any) => `- ID: ${f.id} | Tên: ${f.name.vi || f.name.en} | Email: ${f.email || 'N/A'}`).join('\n');
     
     // Lấy danh sách mục tiêu cụ thể MOET
-    const specificObjectivesStr = generalInfo.moetInfo?.specificObjectives?.map((o: any) => `- ID: ${o.id} | Mô tả: ${o.description.vi}`).join('\n') || '';
+    const specificObjectivesStr = moetInfo?.specificObjectives?.map((o: any) => `- ID: ${o.id} | Mô tả: ${o.description.vi}`).join('\n') || '';
     
     // Lấy danh sách Student Outcomes
     const studentOutcomesStr = sos.map((s: any) => `- ID: ${s.id} | Mã: ${s.code} | Mô tả: ${s.description.vi}`).join('\n');
