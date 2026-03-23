@@ -12,7 +12,7 @@ interface Props {
 }
 
 const OutcomesModule: React.FC<Props> = ({ state, updateState }) => {
-  const { sos, peos, language, peoSoMap, courseSoMap, geminiConfig } = state;
+  const { sos = [], peos = [], language, peoSoMap = [], courseSoMap = [], geminiConfig } = state;
   const t = TRANSLATIONS[language];
   const [isTranslating, setIsTranslating] = useState(false);
 

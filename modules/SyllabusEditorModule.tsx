@@ -163,8 +163,8 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
     const globalState = state.globalState || state;
     const currentProgram = state.programs?.find(p => p.id === state.currentProgramId) || state;
     const { geminiConfig, library, organizationStructure, courseCatalog, globalConfigs } = globalState as any;
-    const { teachingMethods, assessmentMethods, knowledgeAreas } = globalConfigs || state;
-    const { faculties, departments, academicFaculties, academicSchools } = organizationStructure || state;
+    const { teachingMethods = [], assessmentMethods = [], knowledgeAreas = [] } = globalConfigs || state;
+    const { faculties = [], departments = [], academicFaculties = [], academicSchools = [] } = organizationStructure || state;
     const { sos, courseSoMap, coursePiMap } = currentProgram as any;
     const generalInfo = globalState.institutionInfo || state.generalInfo;
 
@@ -1130,7 +1130,7 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
                                             {Object.entries(CATEGORY2_LABELS).map(([cat2, label]) => {
                                                 const hours = topic.subTopics?.reduce((sum, sub) => 
                                                     sum + (sub.activities?.filter(a => {
-                                                        const tm = teachingMethods.find(m => m.id === a.methodId);
+                                                        const tm = (teachingMethods || []).find(m => m.id === a.methodId);
                                                         return tm?.category2 === cat2;
                                                     }).reduce((s, a) => s + a.hours, 0) || 0)
                                                 , 0) || 0;
@@ -1305,7 +1305,7 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
                                                         <div className="flex gap-2 mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200 overflow-x-auto">
                                                             {Object.entries(CATEGORY2_LABELS).map(([cat2, label]) => {
                                                                 const formHours = subTopic.activities?.filter(a => {
-                                                                    const tm = teachingMethods.find(m => m.id === a.methodId);
+                                                                    const tm = (teachingMethods || []).find(m => m.id === a.methodId);
                                                                     return tm?.category2 === cat2;
                                                                 }).reduce((s, a) => s + a.hours, 0) || 0;
                                                                 

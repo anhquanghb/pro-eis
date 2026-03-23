@@ -12,7 +12,7 @@ interface Props {
 }
 
 const StrategyModule: React.FC<Props> = ({ state, updateState }) => {
-  const { mission, peos, language, peoConstituentMap, courses, coursePeoMap, geminiConfig, peoSoMap, courseSoMap, sos } = state;
+  const { mission, peos = [], language, peoConstituentMap = [], courses = [], coursePeoMap = [], geminiConfig, peoSoMap = [], courseSoMap = [], sos = [] } = state;
   const [isTranslating, setIsTranslating] = useState(false);
   const tStrings = TRANSLATIONS[language];
 

@@ -882,7 +882,7 @@ const DepartmentModule: React.FC<Props> = ({ state, updateState }) => {
                         <p className="text-slate-500 text-sm mt-1 ml-1">{selectedDept.name[language === 'vi' ? 'en' : 'vi']}</p>
                         <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
                             <Building size={12}/> {language === 'vi' ? 'Thuộc khoa:' : 'Faculty:'} 
-                            {selectedDept.academicFacultyId ? (
+                            {selectedDept?.academicFacultyId ? (
                                 <span className="font-bold text-slate-600">{academicFaculties.find(f => f.id === selectedDept.academicFacultyId)?.name[language]}</span>
                             ) : (
                                 <span className="font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded flex items-center gap-1"><AlertCircle size={10}/> Unassigned</span>

@@ -22,7 +22,7 @@ const AREA_HEX_COLORS: Record<string, string> = {
 };
 
 const MappingModule: React.FC<Props> = ({ state, updateState }) => {
-  const { courses, sos, courseSoMap, coursePiMap, language, knowledgeAreas, generalInfo } = state;
+  const { courses = [], sos = [], courseSoMap = [], coursePiMap = [], language, knowledgeAreas = [], generalInfo } = state;
   const t = TRANSLATIONS[language];
   
   const [activeTab, setActiveTab] = useState<'catalog' | 'so' | 'pi' | 'areas'>('catalog');

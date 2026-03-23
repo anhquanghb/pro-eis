@@ -92,13 +92,13 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
 
         const genId = (prefix: string, seed: string | number) => `${prefix}-${seed}`;
 
-        const prevFaculties = prev.globalState?.facultyDirectory || prev.faculties;
-        const prevCourses = prev.globalState?.courseCatalog || prev.courses;
+        const prevFaculties = prev.globalState?.facultyDirectory || prev.faculties || [];
+        const prevCourses = prev.globalState?.courseCatalog || prev.courses || [];
         const currentProgram = prev.programs?.find(p => p.id === prev.currentProgramId);
         
-        const prevCourseSoMap = currentProgram?.courseSoMap || prev.courseSoMap;
-        const prevCoursePiMap = currentProgram?.coursePiMap || prev.coursePiMap;
-        const prevCoursePeoMap = currentProgram?.coursePeoMap || prev.coursePeoMap;
+        const prevCourseSoMap = currentProgram?.courseSoMap || prev.courseSoMap || [];
+        const prevCoursePiMap = currentProgram?.coursePiMap || prev.coursePiMap || [];
+        const prevCoursePeoMap = currentProgram?.coursePeoMap || prev.coursePeoMap || [];
         
         const prevMoetInfo = currentProgram?.moetInfo || prev.generalInfo?.moetInfo || { 
             programStructure: { gen: [], phys: [], fund: [], spec: [], grad: [] }, 
