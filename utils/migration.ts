@@ -66,3 +66,13 @@ export const migrateState = (oldData: any): AppState => {
 
   return newState as AppState;
 };
+
+/**
+ * Hàm chuẩn hóa dữ liệu đầu vào.
+ * Được giữ lại để tương thích ngược với các module cũ (như JSONInputModule, App.tsx)
+ */
+export const normalizeIncomingData = (parsedData: any): AppState => {
+  // Gọi lại hàm migrateState để đảm bảo mọi dữ liệu truyền vào 
+  // đều được đưa về cấu trúc AppState chuẩn (v2.0.0) có bọc programs.
+  return migrateState(parsedData);
+};
