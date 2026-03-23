@@ -289,12 +289,12 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
 
     const courseMoetHighlights = useMemo(() => {
         const highlights = new Set<string>();
-        (generalInfo.moetInfo.courseObjectiveMap || []).forEach(k => {
+        (generalInfo.moetInfo?.courseObjectiveMap || []).forEach(k => {
             const [cid, oid] = k.split('|');
             if(cid === course.id) highlights.add(oid);
         });
         const activeSoIds = new Set(courseSoMap.filter(m => m.courseId === course.id && m.level !== '').map(m => m.soId));
-        (generalInfo.moetInfo.moetSpecificObjectives || []).forEach(obj => {
+        (generalInfo.moetInfo?.moetSpecificObjectives || []).forEach(obj => {
             if(obj.soIds?.some(soId => activeSoIds.has(soId))) {
                 highlights.add(obj.id);
             }

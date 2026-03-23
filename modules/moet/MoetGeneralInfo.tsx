@@ -6,7 +6,6 @@ import { InputField } from './MoetShared';
 import FullFormatText from '../../components/FullFormatText';
 
 // 1. IMPORT MODULE JSON
-import MoetJSON from './MoetJSON';
 
 interface Props {
   state: AppState;
@@ -86,9 +85,6 @@ const MoetGeneralInfo: React.FC<Props> = ({ state, updateState }) => {
     <div className="space-y-10">
       {/* 1. Basic Info */}
       <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 bg-slate-50">
-            <MoetJSON state={state} updateState={updateState} />
-          </div>
           <div className="p-4 border-b border-slate-100 bg-slate-50"><h3 className="font-bold text-slate-800 flex items-center gap-2"><BookOpen size={18} className="text-emerald-600"/>{language === 'vi' ? '1. Thông tin chung' : '1. General Information'}</h3></div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <InputField label={language === 'vi' ? 'Trình độ đào tạo' : 'Training Level'} value={moetInfo.level?.[language] || ''} onChange={v => updateMoetLangField('level', v)} placeholder="e.g. Đại học" />

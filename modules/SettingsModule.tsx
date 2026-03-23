@@ -100,7 +100,10 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
         const prevCoursePiMap = currentProgram?.coursePiMap || prev.coursePiMap;
         const prevCoursePeoMap = currentProgram?.coursePeoMap || prev.coursePeoMap;
         
-        const prevMoetInfo = currentProgram?.moetInfo || prev.generalInfo.moetInfo;
+        const prevMoetInfo = currentProgram?.moetInfo || prev.generalInfo?.moetInfo || { 
+            programStructure: { gen: [], phys: [], fund: [], spec: [], grad: [] }, 
+            courseObjectiveMap: [] 
+        };
 
         const newFaculties = prevFaculties.map((f, i) => {
             const safeName = f.name[prev.language].normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, '').toLowerCase().substring(0, 10);

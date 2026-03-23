@@ -91,13 +91,13 @@ const MappingCourseListModule: React.FC<Props> = ({ state, filteredCourses, upda
 
     // Organize Catalog logic
     const organizedCatalog = useMemo(() => {
-        const subBlocks = generalInfo.moetInfo.subBlocks || [];
+        const subBlocks = generalInfo.moetInfo?.subBlocks || [];
         const blockMap = new Map<string, string>();
-        subBlocks.forEach(sb => sb.courseIds.forEach(id => blockMap.set(id, sb.id)));
+        subBlocks.forEach(sb => (sb.courseIds || []).forEach(id => blockMap.set(id, sb.id)));
         
         const standaloneCourses = filteredCourses.filter(c => !blockMap.has(c.id));
         const blockGroups = subBlocks.map(sb => {
-            const innerCourses = courses.filter(c => sb.courseIds.includes(c.id));
+            const innerCourses = courses.filter(c => (sb.courseIds || []).includes(c.id));
             const visibleInnerCourses = innerCourses.filter(c => filteredCourses.some(fc => fc.id === c.id));
             return { block: sb, courses: visibleInnerCourses };
         }).filter(group => group.courses.length > 0);
@@ -378,10 +378,6 @@ const MappingCourseListModule: React.FC<Props> = ({ state, filteredCourses, upda
             )}
 
             <div className="flex justify-end gap-2 animate-in fade-in slide-in-from-top-2 mb-2">
-                <button onClick={handleAutoTranslateCatalog} disabled={isTranslating} className="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-2 hover:bg-indigo-50 hover:text-indigo-600 transition shadow-sm disabled:opacity-50">
-                    <Globe size={12} className={isTranslating ? "animate-spin" : ""} /> {isTranslating ? (language === 'vi' ? 'Đang dịch...' : 'Translating...') : (language === 'vi' ? 'Dịch tự động' : 'Auto Translate')}
-                </button>
-                <div className="h-6 w-px bg-slate-300 mx-1"></div>
                 <input type="file" ref={fileInputRef} className="hidden" accept=".csv" onChange={handleImportCatalog} />
                 <button onClick={() => fileInputRef.current?.click()} className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-2 hover:bg-emerald-100 transition shadow-sm"><FileSpreadsheet size={12} /> Import</button>
                 <button onClick={handleExportCatalog} className="bg-slate-100 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-2 hover:bg-slate-200 transition shadow-sm"><Download size={12} /> Export</button>

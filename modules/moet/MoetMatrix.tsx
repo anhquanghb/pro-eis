@@ -16,7 +16,7 @@ const MoetMatrix: React.FC<Props> = ({ state, updateState }) => {
   const currentProgram = state.programs?.find(p => p.id === state.currentProgramId);
   const courseSoMap = currentProgram?.courseSoMap || state.courseSoMap || [];
   const { language } = state;
-  const moetInfo = currentProgram?.moetInfo || generalInfo.moetInfo || {
+  const moetInfo = currentProgram?.moetInfo || generalInfo?.moetInfo || {
     specificObjectives: [],
     courseObjectiveMap: []
   };
