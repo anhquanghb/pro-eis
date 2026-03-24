@@ -1,13 +1,11 @@
+
 import React, { useState } from 'react';
 import { AppState } from '../types';
 import { TRANSLATIONS, INITIAL_STATE } from '../constants';
 import { clearHandles } from '../utils/fileStorage';
-import { useDataSync } from '../hooks/useDataSync';
-import ConflictResolverModal from '../components/ConflictResolverModal';
-import { migrateState } from '../utils/migration';
 import { 
   Save, Key, Check, AlertTriangle, RefreshCw, Trash2, MessageSquare, ChevronDown, 
-  ChevronUp, Shield, ShieldOff, Info, Wrench, RotateCcw, Upload, Database
+  ChevronUp, Shield, ShieldOff, Info, Wrench, RotateCcw
 } from 'lucide-react';
 
 interface Props {
@@ -27,51 +25,6 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
   const [prompts, setPrompts] = useState(geminiConfig.prompts);
   const [showPrompts, setShowPrompts] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  // --- TÍCH HỢP HOOK XỬ LÝ XUNG ĐỘT DỮ LIỆU ---
-  // Tạo hàm wrapper để map giữa (newState) và (prev => newState)
-  const setAppState = (newState: AppState) => {
-    updateState(() => newState);
-  };
-
-  const { 
-    isResolving, 
-    pendingConflicts, 
-    initiateImport, 
-    finalizeResolution, 
-    cancelResolution 
-  } = useDataSync(state, setAppState);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        try {
-        // 1. Đọc JSON nguyên bản (chưa biết là cũ hay mới)
-        const rawData = JSON.parse(event.target?.result as string);
-        
-        // 2. Chạy qua Migration Script để ép về chuẩn mới nhất
-        const migratedData = migrateState(rawData);
-        
-        // 3. Lấy courses từ chuẩn mới để bắt đầu quy trình Sync / Resolve Conflict
-        const incomingCourses = migratedData.programs[0]?.courses;
-        
-        if (incomingCourses && incomingCourses.length > 0) {
-            initiateImport(incomingCourses);
-        } else {
-            alert(language === 'vi' ? "Không tìm thấy dữ liệu khóa học trong file JSON." : "No course data found in the JSON file.");
-        }
-        } catch (error) {
-        console.error("Parse/Migration error:", error);
-        alert(language === 'vi' ? "Lỗi đọc file JSON! Định dạng không hợp lệ." : "Error parsing JSON file!");
-        }
-    };
-    reader.readAsText(file);
-    e.target.value = ''; // Reset input
-    };
-  // ----------------------------------------------
 
   const saveConfig = () => {
     updateState(prev => {
@@ -113,6 +66,7 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
 
       if (confirm(msg)) {
           localStorage.clear();
+          // Also clear session storage just in case
           sessionStorage.clear();
           try {
               await clearHandles();
@@ -220,7 +174,7 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 p-8 animate-in fade-in relative">
+    <div className="max-w-4xl mx-auto space-y-12 p-8 animate-in fade-in">
       {/* Security & Access Settings */}
       <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-indigo-600">
         <div className="flex justify-between items-center mb-6">
@@ -252,16 +206,16 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
       </section>
 
       {/* AI Configuration */}
-      <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
+      <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <Key className="text-blue-500" size={20}/> AI Configuration (Gemini)
+            <Key className="text-indigo-600" size={20}/> AI Configuration (Gemini)
         </h2>
         <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Model</label>
                     <select 
-                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
                         value={model}
                         onChange={e => setModel(e.target.value)}
                     >
@@ -273,7 +227,7 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
                     <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">API Key (Optional)</label>
                     <input 
                         type="password"
-                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full p-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
                         placeholder="System default if empty..."
                         value={apiKey}
                         onChange={e => setApiKey(e.target.value)}
@@ -281,7 +235,7 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
                 </div>
                 <div className="md:col-span-2">
                     <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-start gap-2">
-                      <Info size={14} className="inline mt-0.5 text-blue-500 shrink-0" />
+                      <Info size={14} className="inline mt-0.5 text-indigo-500 shrink-0" />
                       <span>
                         {language === 'vi' 
                           ? 'Nếu bạn nhập API Key ở đây, nó sẽ được ưu tiên sử dụng thay cho biến môi trường hệ thống. Key này chỉ lưu trong trình duyệt của bạn và KHÔNG được xuất ra khi bạn "Xuất dữ liệu".' 
@@ -294,7 +248,7 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
             <div className="border-t border-slate-100 pt-4 mt-2">
                 <button 
                     onClick={() => setShowPrompts(!showPrompts)}
-                    className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors"
+                    className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors"
                 >
                     <MessageSquare size={14} /> 
                     {language === 'vi' ? 'Tùy chỉnh Prompts nâng cao' : 'Advanced Prompt Customization'}
@@ -306,8 +260,8 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
                             <div key={key}>
                                 <label className="block text-[9px] font-black text-slate-400 mb-1 uppercase tracking-wider">{key}</label>
                                 <textarea 
-                                    className="w-full p-3 border border-slate-200 rounded-xl text-xs font-mono bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-y"
-                                    value={value as string}
+                                    className="w-full p-3 border border-slate-200 rounded-xl text-xs font-mono bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none h-20 resize-y"
+                                    value={value}
                                     onChange={e => setPrompts(prev => ({ ...prev, [key]: e.target.value }))}
                                 />
                             </div>
@@ -318,34 +272,10 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
 
             <button 
                 onClick={saveConfig}
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-md shadow-blue-100"
+                className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
             >
                 {showSuccess ? <Check size={16}/> : <Save size={16}/>} {language === 'vi' ? 'Lưu thay đổi' : 'Save Configuration'}
             </button>
-        </div>
-      </section>
-
-      {/* Data Synchronization & Import */}
-      <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-         <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <Database className="text-emerald-500" size={20}/> {language === 'vi' ? 'Đồng bộ & Nhập Dữ liệu (Enterprise)' : 'Data Sync & Import'}
-        </h2>
-        <div className="space-y-4">
-            <p className="text-sm text-slate-600 font-medium">
-                {language === 'vi' ? 'Công cụ nhập file JSON tích hợp AI thông minh. Tự động phát hiện và xử lý xung đột ID, bảo toàn 100% Ma trận chuẩn đầu ra (CLO/SO).' : 'Smart AI JSON import tool. Automatically detects and resolves ID conflicts, preserving 100% of Outcome Matrices (CLO/SO).'}
-            </p>
-            <div className="flex flex-wrap gap-4">
-                <label className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-md shadow-emerald-100 cursor-pointer">
-                    <Upload size={16}/> 
-                    {language === 'vi' ? 'Nhập & Xử lý File JSON' : 'Import & Sync JSON'}
-                    <input 
-                      type="file" 
-                      accept=".json" 
-                      className="hidden" 
-                      onChange={handleFileUpload}
-                    />
-                </label>
-            </div>
         </div>
       </section>
       
@@ -380,15 +310,6 @@ const SettingsModule: React.FC<Props> = ({ state, updateState, onRepair }) => {
             </div>
         </div>
       </section>
-
-      {/* Render Modal Conflict Resolver nếu có xung đột */}
-      {isResolving && (
-        <ConflictResolverModal 
-          conflicts={pendingConflicts}
-          onResolveAll={finalizeResolution}
-          onClose={cancelResolution}
-        />
-      )}
     </div>
   );
 };
