@@ -108,6 +108,7 @@ export const migrateState = (oldState: any): AppState => {
     },
     GPLO: moetInfo.generalObjectives || { vi: '', en: '' },
     PLOs: moetInfo.moetSpecificObjectives || [],
+    cloPloMap: [],
     LOs: moetInfo.specificObjectives || [],
     PEOs: oldState.peos || [],
     peoPloMap: oldState.peoPloMap || [], 

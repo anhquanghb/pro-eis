@@ -151,7 +151,9 @@ export const generateSingleSyllabusContent = (
     departments: Department[],
     academicFaculties: AcademicFaculty[],
     academicSchools: AcademicSchool[],
-    matrixType: 'ABET' | 'MOET' = 'MOET'
+    matrixType: 'ABET' | 'MOET' = 'MOET',
+    cloPloMap?: any[],
+    plos?: any[]
 ) => {
     const content: any[] = [];
     const labels = language === 'vi' ? {
@@ -433,7 +435,7 @@ export const generateSingleSyllabusContent = (
     content.push(createPara(labels.relationship, styles.h2, AlignmentType.CENTER));
     
     const matrixRows = (course.clos[language] || []).map((_, i) => {
-        const map = course.cloMap?.find(m => m.cloIndex === i) || { topicIds: [], teachingMethodIds: [], assessmentMethodIds: [], coverageLevel: '', soIds: [], objectiveIds: [], piIds: [] };
+        const map = course.cloMap?.find(m => m.cloIndex === i) || { topicIds: [], teachingMethodIds: [], assessmentMethodIds: [], coverageLevel: '' };
         
         const topicNos = map.topicIds.map(tid => course.topics.find(t => t.id === tid)?.no).filter(Boolean).join('\n');
         const methods = map.teachingMethodIds.map(mid => teachingMethods.find(m => m.id === mid)?.code).filter(Boolean).join(', ');
@@ -441,14 +443,11 @@ export const generateSingleSyllabusContent = (
         const displayLevel = map.coverageLevel || "";
         let mappedLabels = "";
         
-        if (matrixType === 'MOET') {
-            mappedLabels = (map.objectiveIds || []).map(oid => getObjectiveLabel(oid)).filter(l => l !== '?').sort().join(', ');
-        } else {
-            mappedLabels = (map.soIds || []).map(sid => {
-                const so = sos.find(s => s.id === sid);
-                return so ? so.code.replace('SO-', '') : '';
-            }).filter(Boolean).sort().join(', ');
-        }
+        const relatedPlos = (cloPloMap || []).filter(m => m.courseId === course.id && m.cloIndex === i);
+        mappedLabels = relatedPlos.map(m => {
+            const plo = (plos || []).find((p: any) => p.id === m.ploId);
+            return plo?.code || '';
+        }).filter(Boolean).sort().join(', ');
 
         return new TableRow({
             children: [
@@ -520,11 +519,14 @@ export const downloadSingleSyllabus = async (
     sos: SO[],
     departments: Department[],
     academicFaculties: AcademicFaculty[],
-    academicSchools: AcademicSchool[]
+    academicSchools: AcademicSchool[],
+    cloPloMap?: any[],
+    plos?: any[]
 ) => {
     const content = generateSingleSyllabusContent(
         course, index, assessmentMethods, language, generalInfo, faculties, 
-        teachingMethods, sos, departments, academicFaculties, academicSchools, type
+        teachingMethods, sos, departments, academicFaculties, academicSchools, type,
+        cloPloMap, plos
     );
 
     const doc = new Document({

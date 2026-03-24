@@ -24,6 +24,8 @@ export const syllabusPart1CService = {
     knowledgeAreas?: any[]; 
     sos: any[]; // Bổ sung mảng danh sách SOs/PIs để tra cứu
     language: 'vi' | 'en';
+    cloPloMap?: any[];
+    plos?: any[];
   }) {
     const content = await this.generateContent(data);
 
@@ -58,8 +60,10 @@ export const syllabusPart1CService = {
     knowledgeAreas?: any[];
     sos: any[];
     language: 'vi' | 'en';
+    cloPloMap?: any[];
+    plos?: any[];
   }) {
-    const { course, allCourses, teachingMethods, generalInfo, knowledgeAreas = [], sos = [], language = 'vi' } = data;
+    const { course, allCourses, teachingMethods, generalInfo, knowledgeAreas = [], sos = [], language = 'vi', cloPloMap = [], plos = [] } = data;
 
     // --- 1. TIỀN XỬ LÝ DỮ LIỆU (PRE-PROCESSING) ---
 
@@ -329,7 +333,7 @@ export const syllabusPart1CService = {
           // 4. CHUẨN ĐẦU RA
           // ==========================================
           this.createSectionHeading(t.section4),
-          this.createCLOTable(course, sos, language)
+          this.createCLOTable(course, sos, language, cloPloMap, plos)
         ];
 
     return content;
@@ -510,7 +514,7 @@ export const syllabusPart1CService = {
   },
 
   // --- HÀM TẠO BẢNG CLO VỚI LOGIC FORMAT MỚI (ABET) ---
-  createCLOTable(course: any, sos: any[], language: string) {
+  createCLOTable(course: any, sos: any[], language: string, cloPloMap?: any[], plos?: any[]) {
     const t = language === 'vi' ? {
       code: "Mã",
       description: "Mô tả CĐR học phần",
@@ -551,31 +555,14 @@ export const syllabusPart1CService = {
         }))
     } else {
         clos.forEach((cloText: string, index: number) => {
-          const mapping = (course.cloMap || []).find((m: any) => m.cloIndex === index);
+          const relatedPlos = (cloPloMap || []).filter((m: any) => m.courseId === course.id && m.cloIndex === index);
           
           let formattedMapping = '';
-          if (mapping) {
-              const groupedMappings: string[] = [];
-              
-              // Duyệt qua toàn bộ SOs để gom nhóm các PI tương ứng
-              for (const so of sos) {
-                  const isSoMapped = mapping.soIds?.includes(so.id);
-                  const matchedPIs = (so.pis || []).filter((pi: any) => mapping.piIds?.includes(pi.id));
-                  
-                  // Nếu SO được chọn hoặc có bất kỳ PI nào thuộc SO được chọn
-                  if (isSoMapped || matchedPIs.length > 0) {
-                      if (matchedPIs.length > 0) {
-                          // Format: SO-x [x.1, x.2]
-                          const piCodes = matchedPIs.map((pi: any) => pi.code).join(', ');
-                          groupedMappings.push(`${so.code} [${piCodes}]`);
-                      } else {
-                          // Nếu chỉ chọn SO mà không chọn PI nào
-                          groupedMappings.push(`${so.code}`);
-                      }
-                  }
-              }
-              // Gom các SO lại, mỗi SO cách nhau bởi dấu xuống dòng (hoặc dấu phẩy tùy ý)
-              formattedMapping = groupedMappings.join('\n');
+          if (relatedPlos.length > 0) {
+              formattedMapping = relatedPlos.map((m: any) => {
+                  const plo = (plos || []).find((p: any) => p.id === m.ploId);
+                  return plo?.code || '';
+              }).filter(Boolean).sort().join(', ');
           }
     
           rows.push(new TableRow({

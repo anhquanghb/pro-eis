@@ -203,9 +203,6 @@ export interface CloMapping {
   teachingMethodIds: string[];
   assessmentMethodIds: string[];
   coverageLevel: CoverageLevel;
-  soIds: string[];
-  piIds?: string[]; // Added to support granular PI mapping
-  objectiveIds?: string[]; // Added to support MOET objective mapping
 }
 
 export interface CourseObjectives {
@@ -616,6 +613,7 @@ export interface ProgramState {
   coursePeoMap: { courseId: string; peoId: string }[];
   peoSoMap: { peoId: string; soId: string }[];
   peoConstituentMap: { peoId: string; constituentId: string }[];
+  cloPloMap: { courseId: string; cloIndex: number; ploId: string }[];
   mission: Mission;
   moetInfo: MoetInfo;
   hasInternationalAccreditation?: boolean;
@@ -661,4 +659,5 @@ export interface AppState {
   coursePeoMap: { courseId: string; peoId: string }[];
   peoSoMap: { peoId: string; soId: string }[];
   peoConstituentMap: { peoId: string; constituentId: string }[];
+  cloPloMap: { courseId: string; cloIndex: number; ploId: string }[];
 }

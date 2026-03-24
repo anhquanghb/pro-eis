@@ -95,7 +95,7 @@ const MoetExport: React.FC<Props> = ({ state }) => {
   const handleExportPage3 = async () => {
       setIsExporting(true);
       try {
-          await exportMoetP3(generalInfo, moetInfo, courses, language, courseSoMap);
+          await exportMoetP3(generalInfo, moetInfo, courses, language, courseSoMap, currentProgram?.cloPloMap);
       } catch (e) {
           console.error(e);
           alert("Export P3 failed.");

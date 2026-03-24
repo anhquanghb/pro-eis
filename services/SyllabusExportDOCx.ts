@@ -17,7 +17,9 @@ export const exportSyllabusDocx = async (
     generalInfo: GeneralInfo,
     faculties: Faculty[],
     teachingMethods: TeachingMethod[],
-    sos: SO[]
+    sos: SO[],
+    cloPloMap?: any[],
+    plos?: any[]
 ) => {
     const labels = language === 'vi' ? {
         creditHours: "Số tín chỉ", instructorInfo: "Thông tin Giảng viên", classInfo: "Thông tin Lớp học",
@@ -353,7 +355,7 @@ export const exportSyllabusDocx = async (
                             new TableCell({ children: [createPara(labels.soCol, { font: styles.tableHeader })], width: { size: 15, type: WidthType.PERCENTAGE }, shading: { fill: "E0E0E0" } }),
                         ]}),
                         ...(course.clos[language] || []).map((_, i) => {
-                            const map = course.cloMap?.find(m => m.cloIndex === i) || { topicIds: [], teachingMethodIds: [], assessmentMethodIds: [], coverageLevel: '', soIds: [], piIds: [] };
+                            const map = course.cloMap?.find(m => m.cloIndex === i) || { topicIds: [], teachingMethodIds: [], assessmentMethodIds: [], coverageLevel: '' };
                             
                             const topicNos = map.topicIds.map(tid => course.topics.find(t => t.id === tid)?.no).filter(Boolean).join(', ');
                             const methods = map.teachingMethodIds.map(mid => teachingMethods.find(m => m.id === mid)?.code).filter(Boolean).join(', ');
@@ -361,17 +363,15 @@ export const exportSyllabusDocx = async (
                             
                             const displayLevel = map.coverageLevel || "";
 
-                            const soCodes = map.soIds.map(sid => {
-                                const s = sos.find(so => so.id === sid);
-                                if (!s) return '';
-                                const soCode = s.code.replace('SO-', '');
-                                const relatedPis = (s.pis || []).filter(pi => (map.piIds || []).includes(pi.id));
-                                if (relatedPis.length > 0) {
-                                    const piCodes = relatedPis.map(pi => pi.code).join(', ');
-                                    return `${soCode} (${piCodes})`;
-                                }
-                                return soCode;
-                            }).filter(Boolean).join(', ');
+                            const soCodes = (cloPloMap || [])
+                                .filter(m => m.courseId === course.id && m.cloIndex === i)
+                                .map(m => {
+                                    const plo = (plos || []).find(p => p.id === m.ploId);
+                                    return plo?.code || '';
+                                })
+                                .filter(Boolean)
+                                .sort()
+                                .join(', ');
 
                             return new TableRow({
                                 children: [

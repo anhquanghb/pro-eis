@@ -95,15 +95,15 @@ const MoetMatrix: React.FC<Props> = ({ state, updateState }) => {
       return set;
   }, [moetInfo.specificObjectives, courseSoMap]);
 
+  const cloPloMap = currentProgram?.cloPloMap || state.cloPloMap || [];
+
   const syllabusImpliedLinks = useMemo(() => {
       const set = new Set<string>();
-      courses.forEach(c => {
-          c.cloMap?.forEach(m => {
-              m.objectiveIds?.forEach(oid => set.add(`${c.id}|${oid}`));
-          });
+      cloPloMap.forEach(m => {
+          set.add(`${m.courseId}|${m.ploId}`);
       });
       return set;
-  }, [courses]);
+  }, [cloPloMap]);
 
   return (
     <section className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">

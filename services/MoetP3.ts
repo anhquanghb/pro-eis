@@ -119,7 +119,8 @@ export const generateMoetPart3 = (
     moetInfo: any, 
     courses: Course[], 
     language: Language,
-    courseSoMap?: any[] 
+    courseSoMap?: any[],
+    cloPloMap?: any[]
 ) => {
     const isVi = language === 'vi' || language !== 'en';
     const sections: any[] = [];
@@ -218,15 +219,11 @@ export const generateMoetPart3 = (
         });
 
         const syllabusLinks = new Set<string>();
-        courses.forEach(c => {
-            if (Array.isArray(c.cloMap)) {
-                c.cloMap.forEach(m => {
-                    if (Array.isArray(m.objectiveIds)) {
-                        m.objectiveIds.forEach(oid => syllabusLinks.add(`${c.id}|${oid}`));
-                    }
-                });
-            }
-        });
+        if (Array.isArray(cloPloMap)) {
+            cloPloMap.forEach(m => {
+                syllabusLinks.add(`${m.courseId}|${m.ploId}`);
+            });
+        }
 
         const indexWidth = 4;
         const codeWidth = 10;
@@ -599,14 +596,15 @@ export const exportMoetP3 = async (
     moetInfo: MoetInfo, 
     courses: Course[], 
     language: Language,
-    courseSoMap?: any[]
+    courseSoMap?: any[],
+    cloPloMap?: any[]
 ) => {
     try {
         if (!generalInfo || !moetInfo || !courses) {
             throw new Error("Missing required data for generation.");
         }
 
-        const children = generateMoetPart3(generalInfo, moetInfo, courses, language, courseSoMap);
+        const children = generateMoetPart3(generalInfo, moetInfo, courses, language, courseSoMap, cloPloMap);
         
         const doc = new Document({
             sections: [{

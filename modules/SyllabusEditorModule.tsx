@@ -40,124 +40,7 @@ const CATEGORY2_LABELS: Record<string, { vi: string, en: string }> = {
     SELF_STUDY: { vi: 'Tự học', en: 'Self-study' },
 };
 
-// --- Helper Component: MOET Objective Selector ---
-const MoetObjectiveSelector = ({ objectives, selectedIds, highlightedIds = new Set(), onUpdate, language }: { objectives: any[], selectedIds: string[], highlightedIds?: Set<string>, onUpdate: (ids: string[]) => void, language: 'vi' | 'en' }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => { if (containerRef.current && !containerRef.current.contains(event.target as Node)) setIsOpen(false); };
-        document.addEventListener("mousedown", handleClickOutside); return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-    const toggleObjective = (id: string) => onUpdate(selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id]);
-    const displayBadges = selectedIds.map(id => objectives.find(o => o.id === id)?.code).filter(Boolean);
-    const sortedObjectives = [...objectives].sort((a, b) => {
-        const aParts = a.code.split('.').map(Number), bParts = b.code.split('.').map(Number);
-        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) { if ((aParts[i] || 0) !== (bParts[i] || 0)) return (aParts[i] || 0) - (bParts[i] || 0); }
-        return 0;
-    });
-
-    return (
-        <div className="relative w-full" ref={containerRef}>
-            <div onClick={() => setIsOpen(!isOpen)} className="w-full min-h-[32px] p-1 border border-slate-200 rounded-lg bg-white hover:border-indigo-300 cursor-pointer flex flex-wrap gap-1 items-center shadow-sm">
-                {displayBadges.length === 0 && <span className="text-[10px] text-slate-300 px-2 italic flex items-center gap-1"><Plus size={10}/> Select</span>}
-                {displayBadges.map((code: string, idx) => <div key={idx} className="flex items-center bg-emerald-50 border border-emerald-100 rounded overflow-hidden"><span className="px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">{code}</span></div>)}
-                <div className="ml-auto pr-1 text-slate-300"><ChevronDown size={12} /></div>
-            </div>
-            {isOpen && (
-                <div className="absolute top-full left-0 z-50 w-[800px] max-w-[90vw] bg-white border border-slate-200 shadow-xl rounded-xl mt-2 p-2 max-h-96 overflow-y-auto animate-in fade-in">
-                    {sortedObjectives.map(obj => {
-                        const isSelected = selectedIds.includes(obj.id), isHighlighted = highlightedIds.has(obj.id), isLevel3 = obj.code && obj.code.split('.').length === 3;
-                        return (
-                            <div key={obj.id} className={`flex items-start p-2 ${isLevel3 ? 'hover:bg-emerald-50 cursor-pointer' : ''} transition-colors group rounded-lg mb-1 ${isSelected ? 'bg-emerald-50/50' : ''} ${isHighlighted ? 'border border-amber-200 bg-amber-50/30' : 'border border-transparent'}`} onClick={() => isLevel3 && toggleObjective(obj.id)}>
-                                {isLevel3 ? <button className={`mr-3 mt-0.5 transition-colors ${isSelected ? 'text-emerald-600' : 'text-slate-300 group-hover:text-emerald-400'}`}>{isSelected ? <CheckSquare size={16} /> : <Square size={16} />}</button> : <div className="mr-3 mt-0.5 w-4" />}
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <div className={`text-xs font-bold ${isSelected ? 'text-emerald-700' : 'text-slate-700'}`}>{obj.code}</div>
-                                        {isHighlighted && <span className="text-[9px] text-amber-600 bg-amber-100 px-1.5 rounded flex items-center gap-1"><Target size={8} /> Matrix</span>}
-                                    </div>
-                                    <div className={`text-[11px] leading-relaxed mt-1 ${isSelected ? 'text-emerald-600' : 'text-slate-500'}`}>{obj.description[language]}</div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
-    );
-};
-
-// --- Helper Component: Hierarchical SO/PI Selector ---
-const SoPiSelector = ({ sos, selectedSoIds, selectedPiIds, onUpdate, globalMappedSoIds, globalMappedPiIds, language }: { sos: SO[], selectedSoIds: string[], selectedPiIds: string[], onUpdate: (soIds: string[], piIds: string[]) => void, globalMappedSoIds: Set<string>, globalMappedPiIds: Set<string>, language: 'vi' | 'en' }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [hoveredItem, setHoveredItem] = useState<{ type: 'so' | 'pi', code: string, description: string } | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => { if (containerRef.current && !containerRef.current.contains(event.target as Node)) setIsOpen(false); };
-        document.addEventListener("mousedown", handleClickOutside); return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-    const toggleSo = (soId: string) => onUpdate(selectedSoIds.includes(soId) ? selectedSoIds.filter(id => id !== soId) : [...selectedSoIds, soId], selectedPiIds);
-    const togglePi = (piId: string) => onUpdate(selectedSoIds, selectedPiIds.includes(piId) ? selectedPiIds.filter(id => id !== piId) : [...selectedPiIds, piId]);
-    const displayBadges = selectedSoIds.map(sid => {
-        const so = sos.find(s => s.id === sid); if (!so) return null;
-        return { code: so.code.replace('SO-', ''), piCodes: (so.pis || []).filter(p => selectedPiIds.includes(p.id)).map(p => p.code) };
-    }).filter(Boolean);
-
-    return (
-        <div className="relative w-full" ref={containerRef}>
-            <div onClick={() => setIsOpen(!isOpen)} className="w-full min-h-[32px] p-1 border border-slate-200 rounded-lg bg-white hover:border-indigo-300 cursor-pointer flex flex-wrap gap-1 items-center shadow-sm">
-                {displayBadges.length === 0 && <span className="text-[10px] text-slate-300 px-2 italic flex items-center gap-1"><Plus size={10}/> Select</span>}
-                {displayBadges.map((item: any, idx) => (
-                    <div key={idx} className="flex items-center bg-indigo-50 border border-indigo-100 rounded overflow-hidden">
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">{item.code}</span>
-                        {item.piCodes.length > 0 && <span className="px-1.5 py-0.5 text-[9px] bg-white text-slate-500 border-l border-indigo-100 flex gap-0.5">{item.piCodes.map((pc: string) => <span key={pc}>{pc}</span>)}</span>}
-                    </div>
-                ))}
-                <div className="ml-auto pr-1 text-slate-300"><ChevronDown size={12} /></div>
-            </div>
-            {isOpen && (
-                <div className="absolute top-full left-0 z-50 w-[800px] max-w-[90vw] bg-white border border-slate-200 shadow-xl rounded-xl mt-2 p-1 max-h-80 overflow-y-auto animate-in fade-in">
-                    {sos.map(so => {
-                        const isSoSelected = selectedSoIds.includes(so.id), isGlobalSo = globalMappedSoIds.has(so.id), hasPis = so.pis && so.pis.length > 0;
-                        return (
-                            <div key={so.id} className="mb-1 last:mb-0">
-                                <div className={`flex items-center p-2 rounded-lg transition-colors group ${isSoSelected ? 'bg-indigo-50' : 'hover:bg-slate-50'} ${isGlobalSo ? 'border border-amber-200 bg-amber-50/30' : ''}`} onMouseEnter={() => setHoveredItem({ type: 'so', code: so.code, description: so.description[language] })} onMouseLeave={() => setHoveredItem(null)}>
-                                    <button onClick={(e) => { e.stopPropagation(); toggleSo(so.id); }} className={`mr-2 transition-colors ${isSoSelected ? 'text-indigo-600' : 'text-slate-300 hover:text-slate-400'}`}>{isSoSelected ? <CheckSquare size={16} /> : <Square size={16} />}</button>
-                                    <div className="flex-1 cursor-default">
-                                        <div className="flex items-center justify-between"><span className={`text-xs font-bold ${isSoSelected ? 'text-indigo-700' : 'text-slate-700'}`}>{so.code}</span>{isGlobalSo && <span className="text-[9px] text-amber-600 bg-amber-100 px-1.5 rounded flex items-center gap-1"><Target size={8} /> Matrix</span>}</div>
-                                        <div className="text-[9px] text-slate-400 line-clamp-1 leading-tight mt-0.5">{so.description[language]}</div>
-                                    </div>
-                                </div>
-                                {hasPis && isSoSelected && (
-                                    <div className="ml-4 pl-3 border-l-2 border-slate-100 mt-1 space-y-1">
-                                        {so.pis.map(pi => {
-                                            const isPiSelected = selectedPiIds.includes(pi.id), isGlobalPi = globalMappedPiIds.has(pi.id);
-                                            return (
-                                                <div key={pi.id} onClick={() => togglePi(pi.id)} onMouseEnter={() => setHoveredItem({ type: 'pi', code: pi.code, description: pi.description[language] })} onMouseLeave={() => setHoveredItem(null)} className={`flex items-center p-1.5 rounded cursor-pointer transition-colors ${isPiSelected ? 'bg-indigo-50/50' : 'hover:bg-slate-50'} ${isGlobalPi ? 'ring-1 ring-amber-100' : ''}`}>
-                                                    <div className={`mr-2 ${isPiSelected ? 'text-indigo-500' : 'text-slate-300'}`}>{isPiSelected ? <CheckSquare size={12} /> : <Square size={12} />}</div>
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2"><span className="text-[10px] font-bold text-slate-600">{pi.code}</span>{isGlobalPi && <div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>}</div>
-                                                        <div className="text-[9px] text-slate-400 line-clamp-1">{pi.description[language]}</div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-            {hoveredItem && (
-                <div className="fixed z-[100] w-64 bg-slate-800 text-white text-[10px] p-2 rounded-lg shadow-xl pointer-events-none animate-in fade-in" style={{ left: containerRef.current ? containerRef.current.getBoundingClientRect().right + 10 : 0, top: containerRef.current ? containerRef.current.getBoundingClientRect().top : 0 }}>
-                    <div className="font-bold border-b border-white/20 pb-1 mb-1 flex items-center justify-between"><span>{hoveredItem.code}</span><span className="text-[8px] uppercase opacity-50">{hoveredItem.type}</span></div>
-                    <div className="leading-relaxed opacity-90 italic">{hoveredItem.description}</div>
-                </div>
-            )}
-        </div>
-    );
-};
-
+// --- SyllabusEditorModule ---
 const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateState, onDelete }) => {
     const { language } = state;
     const globalState = state.globalState || state;
@@ -267,7 +150,6 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
     }, [course.theoryAssessmentConfig?.finalExamForms, globalConfigs?.finalAssessmentMethods, state.finalAssessmentMethods, course.id, updateState]);
 
     const [isAddingMaterial, setIsAddingMaterial] = useState(false);
-    const [expandedCloIndex, setExpandedCloIndex] = useState<number | null>(null);
     const [materialMode, setMaterialMode] = useState<'search' | 'create'>('search');
     const [materialSearch, setMaterialSearch] = useState('');
     const [newMaterial, setNewMaterial] = useState<LibraryResource>({ 
@@ -277,30 +159,6 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
 
     // Process State
     const [isExporting, setIsExporting] = useState(false);
-
-    // Global Matrix Expectations for this course (ABET)
-    const globalMatrixExpectations = useMemo(() => {
-        const soIds = new Set<string>();
-        (courseSoMap || []).filter(m => m.courseId === course.id && m.level !== '').forEach(m => soIds.add(m.soId));
-        const piIds = new Set<string>();
-        (coursePiMap || []).filter(m => m.courseId === course.id).forEach(m => piIds.add(m.piId));
-        return { soIds, piIds };
-    }, [course.id, courseSoMap, coursePiMap]);
-
-    const courseMoetHighlights = useMemo(() => {
-        const highlights = new Set<string>();
-        (generalInfo.moetInfo?.courseObjectiveMap || []).forEach(k => {
-            const [cid, oid] = k.split('|');
-            if(cid === course.id) highlights.add(oid);
-        });
-        const activeSoIds = new Set(courseSoMap.filter(m => m.courseId === course.id && m.level !== '').map(m => m.soId));
-        (generalInfo.moetInfo?.moetSpecificObjectives || []).forEach(obj => {
-            if(obj.soIds?.some(soId => activeSoIds.has(soId))) {
-                highlights.add(obj.id);
-            }
-        });
-        return highlights;
-    }, [course.id, generalInfo.moetInfo, courseSoMap]);
 
     // --- SMART RENUMBERING ALGORITHM ---
     const renumberTopics = (topics: CourseTopic[]) => {
@@ -412,21 +270,6 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
             }
         }
         updateCourse({ assessmentPlan: next });
-    };
-
-    const updateCloMap = (cloIdx: number, updates: Partial<CloMapping>) => {
-        const currentMaps = course.cloMap || [];
-        const existingIdx = currentMaps.findIndex(m => m.cloIndex === cloIdx);
-        let newMaps = [...currentMaps];
-        if (existingIdx >= 0) {
-            newMaps[existingIdx] = { ...newMaps[existingIdx], ...updates };
-        } else {
-            newMaps.push({ 
-                cloIndex: cloIdx, topicIds: [], teachingMethodIds: [], assessmentMethodIds: [], 
-                coverageLevel: CoverageLevel.NONE, soIds: [], piIds: [], objectiveIds: [], ...updates 
-            });
-        }
-        updateCourse({ cloMap: newMaps });
     };
 
     const handleAddClo = () => {
@@ -613,7 +456,7 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
         const totalCourseCredits = methodSummaries.reduce((sum, m) => sum + m.credits, 0);
 
         const mappedInSyllabusSoIds = new Set<string>();
-        course.cloMap?.forEach(m => m.soIds.forEach(id => mappedInSyllabusSoIds.add(id)));
+        // course.cloMap?.forEach(m => m.soIds.forEach(id => mappedInSyllabusSoIds.add(id)));
 
         return (
             <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
@@ -944,20 +787,12 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
                                     <span className="text-xs font-bold text-slate-400 mt-2.5 w-12 text-right">CLO.{idx + 1}</span>
                                     <div className="flex-1 relative">
                                         <textarea 
-                                            className={`w-full p-3 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none transition-all ${expandedCloIndex === idx ? 'border-indigo-300 ring-1 ring-indigo-100' : 'border-slate-200'}`}
+                                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none transition-all"
                                             rows={2}
                                             value={clo}
                                             onChange={(e) => handleUpdateClo(idx, e.target.value)}
-                                            onClick={() => setExpandedCloIndex(expandedCloIndex === idx ? null : idx)}
                                             placeholder={`Enter CLO content in ${language.toUpperCase()}...`}
                                         />
-                                        <button 
-                                            onClick={() => setExpandedCloIndex(expandedCloIndex === idx ? null : idx)}
-                                            className={`absolute right-2 bottom-2 p-1 rounded-md transition-colors ${expandedCloIndex === idx ? 'text-indigo-600 bg-indigo-50' : 'text-slate-300 hover:text-indigo-500'}`}
-                                            title="Mapping"
-                                        >
-                                            <Layers size={14} />
-                                        </button>
                                     </div>
                                     <button 
                                         onClick={() => handleDeleteClo(idx)} 
@@ -966,37 +801,6 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
-                                
-                                {expandedCloIndex === idx && (
-                                    <div className="ml-12 p-4 bg-white border border-indigo-100 rounded-xl shadow-sm space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <div className="space-y-2 w-full">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                                <CheckSquare size={10} /> {language === 'vi' ? 'Đáp ứng Mục tiêu cụ thể' : 'Specific Objectives Mapping'}
-                                            </label>
-                                            <MoetObjectiveSelector 
-                                                objectives={generalInfo?.moetInfo?.specificObjectives || []} 
-                                                selectedIds={course.cloMap?.find(m => m.cloIndex === idx)?.objectiveIds || []} 
-                                                highlightedIds={courseMoetHighlights} 
-                                                onUpdate={(ids) => updateCloMap(idx, { objectiveIds: ids })} 
-                                                language={language}
-                                            />
-                                        </div>
-                                        <div className="space-y-2 w-full">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                                <Sparkles size={10} /> {language === 'vi' ? 'Liên kết với SOs của KĐQT' : 'International Accreditation SOs Mapping'}
-                                            </label>
-                                            <SoPiSelector 
-                                                sos={sos} 
-                                                selectedSoIds={course.cloMap?.find(m => m.cloIndex === idx)?.soIds || []} 
-                                                selectedPiIds={course.cloMap?.find(m => m.cloIndex === idx)?.piIds || []} 
-                                                globalMappedSoIds={globalMatrixExpectations.soIds} 
-                                                globalMappedPiIds={globalMatrixExpectations.piIds} 
-                                                language={language} 
-                                                onUpdate={(soIds, piIds) => updateCloMap(idx, { soIds, piIds })} 
-                                            />
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         ))}
                         {(course.clos[language] || []).length === 0 && (
@@ -1188,10 +992,7 @@ const SyllabusEditorModule: React.FC<EditorProps> = ({ course, state, updateStat
                                                                             topicIds: [topic.id],
                                                                             teachingMethodIds: [],
                                                                             assessmentMethodIds: [],
-                                                                            coverageLevel: CoverageLevel.NONE,
-                                                                            soIds: [],
-                                                                            piIds: [],
-                                                                            objectiveIds: []
+                                                                            coverageLevel: CoverageLevel.NONE
                                                                         });
                                                                     }
                                                                     updateCourse({ cloMap: newMaps });

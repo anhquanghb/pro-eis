@@ -813,6 +813,7 @@ export const INITIAL_STATE: AppState = {
   
   // --- NEW RELATIONAL STATE ---
   currentProgramId: 'prog-1',
+  cloPloMap: [],
   globalState: {
     institutionInfo: {
       university: { vi: 'Đại học ABC', en: 'ABC University' },
@@ -1285,6 +1286,7 @@ export const INITIAL_STATE: AppState = {
       courseSoMap: [],
       coursePiMap: [],
       coursePeoMap: [],
+      cloPloMap: [],
       peoSoMap: [],
       peoConstituentMap: [],
       mission: {

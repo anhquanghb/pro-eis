@@ -73,7 +73,9 @@ const SyllabusExportModule: React.FC<ExportModuleProps> = ({ course, state }) =>
         generalInfo: generalInfo,
         knowledgeAreas: knowledgeAreas || [],
         sos: sos || [], // Truyền danh sách SOs/PIs
-        language
+        language,
+        cloPloMap: currentProgram?.cloPloMap || [],
+        plos: currentProgram?.PLOs || []
       });
       downloadBlob(blob, `De_cuong_Hoc_phan_P1C_${course.code || course.id}.docx`);
     } catch (error) {

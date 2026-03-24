@@ -2,13 +2,14 @@
 import React, { useState } from 'react';
 import { AppState, MoetInfo } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { Layout, Download, BookOpen, Target, FileText, BoxSelect, Grid3X3, List, Settings } from 'lucide-react';
+import { Layout, Download, BookOpen, Target, FileText, BoxSelect, Grid3X3, List, Settings, Link2 } from 'lucide-react';
 
 // Import sub-modules
 import MoetGeneralInfo from './moet/MoetGeneralInfo';
 import MoetObjectives from './moet/MoetObjectives';
 import MoetDetails from './moet/MoetDetails';
 import MoetStructure from './moet/MoetStructure';
+import MoetCLOMapping from './moet/MoetCLOMapping';
 import MoetMatrix from './moet/MoetMatrix';
 import MoetSyllabi from './moet/MoetSyllabi';
 import MoetExport from './moet/MoetExport';
@@ -42,7 +43,7 @@ const TransformationModule: React.FC<Props> = ({ state, updateState }) => {
     specificObjectives: []
   };
   
-  const [activeTab, setActiveTab] = useState<'info' | 'objectives' | 'details' | 'structure' | 'blocks' | 'matrix' | 'config' | 'syllabi' | 'export'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'objectives' | 'details' | 'structure' | 'clo-mapping' | 'matrix' | 'config' | 'syllabi' | 'export'>('info');
 
   const tStrings = TRANSLATIONS[language];
 
@@ -51,6 +52,7 @@ const TransformationModule: React.FC<Props> = ({ state, updateState }) => {
       { id: 'objectives', label: language === 'vi' ? 'Mục tiêu & CĐR' : 'Objectives', icon: Target },
       { id: 'details', label: language === 'vi' ? 'Thông tin chi tiết' : 'Details', icon: FileText },
       { id: 'structure', label: language === 'vi' ? 'Cấu trúc CT' : 'Structure', icon: BoxSelect },
+      { id: 'clo-mapping', label: language === 'vi' ? 'Mapping CLO' : 'CLO Mapping', icon: Link2 },
       { id: 'matrix', label: language === 'vi' ? 'Ma trận' : 'Matrix', icon: Grid3X3 },
       { id: 'config', label: language === 'vi' ? 'Cấu hình chung' : 'General Config', icon: Settings },
       { id: 'syllabi', label: language === 'vi' ? 'Học phần' : 'Courses', icon: List },
@@ -93,6 +95,7 @@ const TransformationModule: React.FC<Props> = ({ state, updateState }) => {
               {activeTab === 'objectives' && <MoetObjectives state={state} updateState={updateState} />}
               {activeTab === 'details' && <MoetDetails state={state} updateState={updateState} />}
               {activeTab === 'structure' && <MoetStructure state={state} updateState={updateState} />}
+              {activeTab === 'clo-mapping' && <MoetCLOMapping state={state} updateState={updateState} />}
               {activeTab === 'matrix' && <MoetMatrix state={state} updateState={updateState} />}
               {activeTab === 'config' && <SyllabusConfigModule state={state} updateState={updateState} />}
               {activeTab === 'syllabi' && <MoetSyllabi state={state} updateState={updateState} />}
